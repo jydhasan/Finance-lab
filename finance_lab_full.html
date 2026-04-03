@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Finance Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #161922;
+    --surface2: #1e2330;
+    --border: #2a2f3d;
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --green: #22d3a0;
+    --green-dim: rgba(34,211,160,0.12);
+    --blue: #60a5fa;
+    --blue-dim: rgba(96,165,250,0.12);
+    --amber: #fbbf24;
+    --amber-dim: rgba(251,191,36,0.12);
+    --red: #f87171;
+    --red-dim: rgba(248,113,113,0.12);
+    --purple: #a78bfa;
+    --purple-dim: rgba(167,139,250,0.12);
+    --cyan: #22d3ee;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; min-height: 100vh; }
+
+  header {
+    padding: 1.2rem 2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 1rem;
+    background: var(--surface);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo { font-family: 'Fraunces', serif; font-size: 1.3rem; font-weight: 600; color: var(--green); letter-spacing: -0.02em; }
+  .logo span { color: var(--muted); font-weight: 300; font-style: italic; }
+  .tagline { font-size: 10px; color: var(--muted); margin-left: auto; letter-spacing: 0.1em; text-transform: uppercase; }
+
+  nav {
+    display: flex; gap: 0; border-bottom: 1px solid var(--border);
+    background: var(--surface); padding: 0 1.5rem; overflow-x: auto;
+    scrollbar-width: none;
+  }
+  nav::-webkit-scrollbar { display: none; }
+  .tab {
+    padding: 0.7rem 1rem; font-size: 10px; letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent;
+    white-space: nowrap; transition: color 0.15s, border-color 0.15s; flex-shrink: 0;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--green); border-bottom-color: var(--green); }
+
+  .panel { display: none; padding: 1.75rem; max-width: 1000px; margin: 0 auto; }
+  .panel.active { display: block; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 0.85rem; }
+  @media(max-width:680px){ .grid-2,.grid-3,.grid-4{grid-template-columns:1fr 1fr;} }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem; }
+  .card-title { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1rem; }
+
+  .metric-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem; }
+  .metric-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.35rem; }
+  .metric-value { font-family: 'Fraunces', serif; font-size: 1.45rem; font-weight: 600; line-height: 1; }
+  .metric-value.green { color: var(--green); }
+  .metric-value.blue { color: var(--blue); }
+  .metric-value.amber { color: var(--amber); }
+  .metric-value.red { color: var(--red); }
+  .metric-value.purple { color: var(--purple); }
+  .metric-value.cyan { color: var(--cyan); }
+
+  .slider-group { margin-bottom: 0.9rem; }
+  .slider-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem; }
+  .slider-name { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .slider-value { font-size: 12px; color: var(--text); font-weight: 500; }
+  input[type=range] { width: 100%; appearance: none; height: 3px; background: var(--border); border-radius: 2px; outline: none; cursor: pointer; }
+  input[type=range]::-webkit-slider-thumb { appearance: none; width: 13px; height: 13px; border-radius: 50%; background: var(--green); cursor: pointer; box-shadow: 0 0 6px rgba(34,211,160,0.5); }
+
+  .chart-wrap { position: relative; height: 210px; margin-top: 0.75rem; }
+
+  .section-title { font-family: 'Fraunces', serif; font-size: 1rem; font-weight: 300; color: var(--text); margin-bottom: 1.25rem; border-left: 3px solid var(--green); padding-left: 0.7rem; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  th { text-align: left; color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.45rem 0.65rem; border-bottom: 1px solid var(--border); }
+  td { padding: 0.45rem 0.65rem; border-bottom: 1px solid rgba(42,47,61,0.5); }
+  tr:last-child td { border-bottom: none; }
+  .pos { color: var(--green); } .neg { color: var(--red); }
+
+  .cf-row { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.45rem; }
+  .cf-label { font-size: 10px; color: var(--muted); min-width: 44px; }
+  input[type=number], input[type=text], select {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text); font-family: 'DM Mono', monospace; font-size: 12px;
+    padding: 0.45rem 0.65rem; width: 100%; outline: none; appearance: none;
+  }
+  input[type=number]:focus, input[type=text]:focus, select:focus { border-color: var(--green); }
+  select option { background: var(--surface2); }
+
+  .btn { background: var(--green-dim); border: 1px solid var(--green); color: var(--green); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.06em; padding: 0.4rem 0.85rem; border-radius: 5px; cursor: pointer; text-transform: uppercase; transition: background 0.15s; }
+  .btn:hover { background: rgba(34,211,160,0.22); }
+  .btn-sm { padding: 0.28rem 0.55rem; font-size: 10px; }
+  .btn-red { background: var(--red-dim); border-color: var(--red); color: var(--red); }
+  .btn-blue { background: var(--blue-dim); border-color: var(--blue); color: var(--blue); }
+
+  .divider { height: 1px; background: var(--border); margin: 1.2rem 0; }
+  .row-gap { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem; }
+  .label-sm { font-size: 10px; color: var(--muted); white-space: nowrap; min-width: 90px; }
+
+  /* Portfolio table */
+  .port-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem; }
+  .port-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 0.5rem; margin-bottom: 0.4rem; }
+  .port-header span { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .icon-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 14px; padding: 0.2rem 0.4rem; border-radius: 4px; transition: color 0.15s; }
+  .icon-btn:hover { color: var(--red); }
+
+  .badge { display: inline-block; padding: 0.18rem 0.55rem; border-radius: 4px; font-size: 11px; font-weight: 500; }
+  .badge-green { background: var(--green-dim); color: var(--green); }
+  .badge-red { background: var(--red-dim); color: var(--red); }
+  .badge-blue { background: var(--blue-dim); color: var(--blue); }
+  .badge-amber { background: var(--amber-dim); color: var(--amber); }
+
+  .info-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem 1rem; font-size: 11px; color: var(--muted); line-height: 1.6; margin-top: 0.75rem; }
+  .info-box strong { color: var(--text); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Finance<span>Lab</span></div>
+  <div class="tagline">11 Interactive Tools</div>
+</header>
+
+<nav>
+  <div class="tab active" onclick="showTab('compound',this)">Compound Interest</div>
+  <div class="tab" onclick="showTab('simple',this)">Simple Interest</div>
+  <div class="tab" onclick="showTab('annuity',this)">Annuity</div>
+  <div class="tab" onclick="showTab('discounting',this)">Discounting / PV</div>
+  <div class="tab" onclick="showTab('capital',this)">Capital Budgeting</div>
+  <div class="tab" onclick="showTab('loan',this)">Loan / EMI</div>
+  <div class="tab" onclick="showTab('capm',this)">CAPM & Beta</div>
+  <div class="tab" onclick="showTab('bond',this)">Bond / YTM</div>
+  <div class="tab" onclick="showTab('breakeven',this)">Break-Even</div>
+  <div class="tab" onclick="showTab('currency',this)">Currency</div>
+  <div class="tab" onclick="showTab('portfolio',this)">Portfolio</div>
+</nav>
+
+<!-- ===== COMPOUND INTEREST ===== -->
+<div class="panel active" id="tab-compound">
+  <div class="section-title">Compound Interest Explorer</div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Parameters</div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Principal</span><span class="slider-value" id="ci-p-out">$10,000</span></div><input type="range" id="ci-p" min="1000" max="500000" step="1000" value="10000" oninput="updateCI()"></div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Annual Rate</span><span class="slider-value" id="ci-r-out">7.0%</span></div><input type="range" id="ci-r" min="0.5" max="30" step="0.5" value="7" oninput="updateCI()"></div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Years</span><span class="slider-value" id="ci-y-out">20 yrs</span></div><input type="range" id="ci-y" min="1" max="50" step="1" value="20" oninput="updateCI()"></div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Monthly Add-on</span><span class="slider-value" id="ci-m-out">$0</span></div><input type="range" id="ci-m" min="0" max="5000" step="50" value="0" oninput="updateCI()"></div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Compounding</span><span class="slider-value" id="ci-n-out">Monthly</span></div><input type="range" id="ci-n" min="1" max="4" step="1" value="3" oninput="updateCI()"></div>
+    </div>
+    <div>
+      <div class="grid-2" style="margin-bottom:1rem;">
+        <div class="metric-card"><div class="metric-label">Total Invested</div><div class="metric-value blue" id="ci-invested">—</div></div>
+        <div class="metric-card"><div class="metric-label">Final Balance</div><div class="metric-value green" id="ci-final">—</div></div>
+        <div class="metric-card"><div class="metric-label">Interest Earned</div><div class="metric-value amber" id="ci-interest">—</div></div>
+        <div class="metric-card"><div class="metric-label">Multiplier</div><div class="metric-value purple" id="ci-mult">—</div></div>
+      </div>
+      <div class="card"><div class="chart-wrap"><canvas id="ci-chart"></canvas></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SIMPLE INTEREST ===== -->
+<div class="panel" id="tab-simple">
+  <div class="section-title">Simple Interest — vs Compound</div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Parameters</div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Principal</span><span class="slider-value" id="si-p-out">$10,000</span></div><input type="range" id="si-p" min="1000" max="500000" step="1000" value="10000" oninput="updateSI()"></div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Annual Rate</span><span class="slider-value" id="si-r-out">7.0%</span></div><input type="range" id="si-r" min="0.5" max="30" step="0.5" value="7" oninput="updateSI()"></div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Years</span><span class="slider-value" id="si-y-out">10 yrs</span></div><input type="range" id="si-y" min="1" max="40" step="1" value="10" oninput="updateSI()"></div>
+      <div class="divider"></div>
+      <div class="grid-2">
+        <div class="metric-card"><div class="metric-label">SI Balance</div><div class="metric-value blue" id="si-final">—</div></div>
+        <div class="metric-card"><div class="metric-label">CI Balance</div><div class="metric-value green" id="si-ci-final">—</div></div>
+        <div class="metric-card"><div class="metric-label">SI Interest</div><div class="metric-value amber" id="si-int">—</div></div>
+        <div class="metric-card"><div class="metric-label">CI Advantage</div><div class="metric-value purple" id="si-diff">—</div></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">Growth Comparison</div><div class="chart-wrap"><canvas id="si-chart"></canvas></div></div>
+  </div>
+</div>
+
+<!-- ===== ANNUITY ===== -->
+<div class="panel" id="tab-annuity">
+  <div class="section-title">Annuity Calculator</div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Parameters</div>
+      <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+        <button class="btn" id="ann-ord-btn" onclick="setAnnuityType('ordinary')">Ordinary</button>
+        <button class="btn" style="background:transparent;border-color:var(--border);color:var(--muted);" id="ann-due-btn" onclick="setAnnuityType('due')">Annuity Due</button>
+      </div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Payment (PMT)</span><span class="slider-value" id="ann-pmt-out">$1,000</span></div><input type="range" id="ann-pmt" min="100" max="10000" step="100" value="1000" oninput="updateAnnuity()"></div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Annual Rate</span><span class="slider-value" id="ann-r-out">6.0%</span></div><input type="range" id="ann-r" min="0.5" max="25" step="0.5" value="6" oninput="updateAnnuity()"></div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Periods (n)</span><span class="slider-value" id="ann-n-out">10</span></div><input type="range" id="ann-n" min="1" max="40" step="1" value="10" oninput="updateAnnuity()"></div>
+      <div class="divider"></div>
+      <div class="grid-2">
+        <div class="metric-card"><div class="metric-label">Future Value</div><div class="metric-value green" id="ann-fv">—</div></div>
+        <div class="metric-card"><div class="metric-label">Present Value</div><div class="metric-value blue" id="ann-pv">—</div></div>
+        <div class="metric-card"><div class="metric-label">Total Paid</div><div class="metric-value amber" id="ann-total">—</div></div>
+        <div class="metric-card"><div class="metric-label">Interest Portion</div><div class="metric-value purple" id="ann-int">—</div></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">Cumulative FV Growth</div><div class="chart-wrap"><canvas id="ann-chart"></canvas></div></div>
+  </div>
+</div>
+
+<!-- ===== DISCOUNTING ===== -->
+<div class="panel" id="tab-discounting">
+  <div class="section-title">Discounting & Present Value</div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Parameters</div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Future Value</span><span class="slider-value" id="dsc-fv-out">$50,000</span></div><input type="range" id="dsc-fv" min="1000" max="1000000" step="1000" value="50000" oninput="updateDiscount()"></div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Discount Rate</span><span class="slider-value" id="dsc-r-out">8.0%</span></div><input type="range" id="dsc-r" min="0.5" max="30" step="0.5" value="8" oninput="updateDiscount()"></div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Years</span><span class="slider-value" id="dsc-y-out">10 yrs</span></div><input type="range" id="dsc-y" min="1" max="50" step="1" value="10" oninput="updateDiscount()"></div>
+      <div class="divider"></div>
+      <div class="grid-2">
+        <div class="metric-card"><div class="metric-label">Present Value</div><div class="metric-value green" id="dsc-pv">—</div></div>
+        <div class="metric-card"><div class="metric-label">Discount Factor</div><div class="metric-value blue" id="dsc-df">—</div></div>
+        <div class="metric-card"><div class="metric-label">Value Lost</div><div class="metric-value red" id="dsc-lost">—</div></div>
+        <div class="metric-card"><div class="metric-label">Effective Loss %</div><div class="metric-value amber" id="dsc-pct">—</div></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">PV Decay Over Time</div><div class="chart-wrap"><canvas id="dsc-chart"></canvas></div></div>
+  </div>
+</div>
+
+<!-- ===== CAPITAL BUDGETING ===== -->
+<div class="panel" id="tab-capital">
+  <div class="section-title">Capital Budgeting — NPV, IRR & Payback</div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Cash Flows & Rate</div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Discount Rate (WACC)</span><span class="slider-value" id="cb-r-out">10.0%</span></div><input type="range" id="cb-r" min="1" max="40" step="0.5" value="10" oninput="updateCapBudget()"></div>
+      <div class="card-title" style="margin-top:0.5rem;">Cash Flows ($) — Y0 = initial outflow</div>
+      <div id="cf-inputs"></div>
+      <div style="display:flex;gap:0.5rem;margin-top:0.65rem;">
+        <button class="btn btn-sm" onclick="addCF()">+ Year</button>
+        <button class="btn btn-sm btn-red" onclick="removeCF()">− Remove</button>
+      </div>
+    </div>
+    <div>
+      <div class="grid-2" style="margin-bottom:1rem;">
+        <div class="metric-card"><div class="metric-label">NPV</div><div class="metric-value" id="cb-npv">—</div></div>
+        <div class="metric-card"><div class="metric-label">IRR</div><div class="metric-value purple" id="cb-irr">—</div></div>
+        <div class="metric-card"><div class="metric-label">Payback Period</div><div class="metric-value amber" id="cb-payback">—</div></div>
+        <div class="metric-card"><div class="metric-label">Prof. Index</div><div class="metric-value blue" id="cb-pi">—</div></div>
+      </div>
+      <div class="card"><div class="card-title">Cumulative Cash Flow</div><div class="chart-wrap" style="height:165px;"><canvas id="cb-chart"></canvas></div></div>
+      <div class="card" style="margin-top:1rem;"><div id="cb-table"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LOAN ===== -->
+<div class="panel" id="tab-loan">
+  <div class="section-title">Loan & EMI Calculator</div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Loan Details</div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Loan Amount</span><span class="slider-value" id="loan-p-out">$100,000</span></div><input type="range" id="loan-p" min="10000" max="2000000" step="5000" value="100000" oninput="updateLoan()"></div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Annual Rate</span><span class="slider-value" id="loan-r-out">8.0%</span></div><input type="range" id="loan-r" min="0.5" max="30" step="0.25" value="8" oninput="updateLoan()"></div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Tenure</span><span class="slider-value" id="loan-y-out">20 yrs</span></div><input type="range" id="loan-y" min="1" max="30" step="1" value="20" oninput="updateLoan()"></div>
+      <div class="divider"></div>
+      <div class="grid-2">
+        <div class="metric-card"><div class="metric-label">Monthly EMI</div><div class="metric-value green" id="loan-emi">—</div></div>
+        <div class="metric-card"><div class="metric-label">Total Payment</div><div class="metric-value blue" id="loan-total">—</div></div>
+        <div class="metric-card"><div class="metric-label">Total Interest</div><div class="metric-value red" id="loan-int">—</div></div>
+        <div class="metric-card"><div class="metric-label">Interest Ratio</div><div class="metric-value amber" id="loan-ratio">—</div></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">Principal vs Interest (Yearly)</div><div class="chart-wrap"><canvas id="loan-chart"></canvas></div></div>
+  </div>
+</div>
+
+<!-- ===== CAPM ===== -->
+<div class="panel" id="tab-capm">
+  <div class="section-title">CAPM & Beta Calculator</div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">CAPM Inputs</div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Risk-Free Rate (Rf)</span><span class="slider-value" id="capm-rf-out">4.0%</span></div><input type="range" id="capm-rf" min="0" max="15" step="0.25" value="4" oninput="updateCAPM()"></div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Market Return (Rm)</span><span class="slider-value" id="capm-rm-out">10.0%</span></div><input type="range" id="capm-rm" min="0" max="25" step="0.25" value="10" oninput="updateCAPM()"></div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Beta (β)</span><span class="slider-value" id="capm-beta-out">1.20</span></div><input type="range" id="capm-beta" min="0" max="3" step="0.05" value="1.2" oninput="updateCAPM()"></div>
+      <div class="divider"></div>
+      <div class="grid-2">
+        <div class="metric-card"><div class="metric-label">Required Return</div><div class="metric-value green" id="capm-re">—</div></div>
+        <div class="metric-card"><div class="metric-label">Market Premium</div><div class="metric-value blue" id="capm-mrp">—</div></div>
+        <div class="metric-card"><div class="metric-label">Risk Premium</div><div class="metric-value amber" id="capm-rp">—</div></div>
+        <div class="metric-card"><div class="metric-label">Beta Class</div><div class="metric-value" id="capm-class">—</div></div>
+      </div>
+      <div class="info-box" id="capm-info"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Required Return vs Beta</div>
+      <div class="chart-wrap"><canvas id="capm-chart"></canvas></div>
+      <div class="divider"></div>
+      <div class="card-title">Security Market Line (SML) Table</div>
+      <div id="capm-table"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== BOND ===== -->
+<div class="panel" id="tab-bond">
+  <div class="section-title">Bond Pricing & Yield to Maturity</div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Bond Parameters</div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Face Value ($)</span><span class="slider-value" id="bond-fv-out">$1,000</span></div><input type="range" id="bond-fv" min="100" max="10000" step="100" value="1000" oninput="updateBond()"></div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Coupon Rate</span><span class="slider-value" id="bond-c-out">6.0%</span></div><input type="range" id="bond-c" min="0" max="20" step="0.25" value="6" oninput="updateBond()"></div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Years to Maturity</span><span class="slider-value" id="bond-y-out">10 yrs</span></div><input type="range" id="bond-y" min="1" max="30" step="1" value="10" oninput="updateBond()"></div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Market Rate (YTM)</span><span class="slider-value" id="bond-ytm-out">8.0%</span></div><input type="range" id="bond-ytm" min="0.5" max="25" step="0.25" value="8" oninput="updateBond()"></div>
+      <div class="divider"></div>
+      <div class="grid-2">
+        <div class="metric-card"><div class="metric-label">Bond Price</div><div class="metric-value green" id="bond-price">—</div></div>
+        <div class="metric-card"><div class="metric-label">Annual Coupon</div><div class="metric-value blue" id="bond-coupon">—</div></div>
+        <div class="metric-card"><div class="metric-label">Current Yield</div><div class="metric-value amber" id="bond-cy">—</div></div>
+        <div class="metric-card"><div class="metric-label">Premium / Discount</div><div class="metric-value" id="bond-pd">—</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Bond Price vs Market Rate</div>
+      <div class="chart-wrap"><canvas id="bond-chart"></canvas></div>
+      <div class="info-box" id="bond-info"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== BREAK-EVEN ===== -->
+<div class="panel" id="tab-breakeven">
+  <div class="section-title">Break-Even Analysis</div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Cost & Revenue Inputs</div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Fixed Costs</span><span class="slider-value" id="be-fc-out">$50,000</span></div><input type="range" id="be-fc" min="1000" max="500000" step="1000" value="50000" oninput="updateBreakeven()"></div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Variable Cost / Unit</span><span class="slider-value" id="be-vc-out">$30</span></div><input type="range" id="be-vc" min="1" max="500" step="1" value="30" oninput="updateBreakeven()"></div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Selling Price / Unit</span><span class="slider-value" id="be-sp-out">$50</span></div><input type="range" id="be-sp" min="2" max="1000" step="1" value="50" oninput="updateBreakeven()"></div>
+      <div class="slider-group"><div class="slider-header"><span class="slider-name">Expected Units Sold</span><span class="slider-value" id="be-units-out">5,000</span></div><input type="range" id="be-units" min="100" max="50000" step="100" value="5000" oninput="updateBreakeven()"></div>
+      <div class="divider"></div>
+      <div class="grid-2">
+        <div class="metric-card"><div class="metric-label">BEP (Units)</div><div class="metric-value green" id="be-bep-u">—</div></div>
+        <div class="metric-card"><div class="metric-label">BEP (Revenue)</div><div class="metric-value blue" id="be-bep-r">—</div></div>
+        <div class="metric-card"><div class="metric-label">Profit / Loss</div><div class="metric-value" id="be-profit">—</div></div>
+        <div class="metric-card"><div class="metric-label">Margin of Safety</div><div class="metric-value amber" id="be-mos">—</div></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">Cost / Revenue Chart</div><div class="chart-wrap"><canvas id="be-chart"></canvas></div></div>
+  </div>
+</div>
+
+<!-- ===== CURRENCY ===== -->
+<div class="panel" id="tab-currency">
+  <div class="section-title">Currency Converter</div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Convert</div>
+      <div class="row-gap">
+        <span class="label-sm">Amount</span>
+        <input type="number" id="curr-amount" value="1000" oninput="updateCurrency()" style="font-size:1.1rem;font-family:'Fraunces',serif;">
+      </div>
+      <div class="row-gap">
+        <span class="label-sm">From</span>
+        <select id="curr-from" onchange="updateCurrency()"></select>
+      </div>
+      <div class="row-gap">
+        <span class="label-sm">To</span>
+        <select id="curr-to" onchange="updateCurrency()"></select>
+      </div>
+      <div class="divider"></div>
+      <div class="metric-card" style="margin-bottom:0.75rem;">
+        <div class="metric-label">Converted Amount</div>
+        <div class="metric-value green" id="curr-result" style="font-size:2rem;">—</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Exchange Rate</div>
+        <div class="metric-value blue" id="curr-rate">—</div>
+      </div>
+      <div class="info-box" style="margin-top:0.75rem;">
+        <strong>Note:</strong> These are approximate rates for educational purposes. For live rates, connect to an FX API (e.g. ExchangeRate-API).
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Quick Reference — vs USD</div>
+      <div id="curr-table"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PORTFOLIO ===== -->
+<div class="panel" id="tab-portfolio">
+  <div class="section-title">Portfolio Return Tracker</div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Holdings</div>
+      <div class="port-header">
+        <span>Asset</span><span>Weight %</span><span>Return %</span><span>Contrib.</span><span></span>
+      </div>
+      <div id="port-rows"></div>
+      <div style="display:flex;gap:0.5rem;margin-top:0.75rem;">
+        <button class="btn btn-sm" onclick="addPortRow()">+ Asset</button>
+        <button class="btn btn-sm btn-blue" onclick="normalizeWeights()">Normalize</button>
+      </div>
+      <div class="divider"></div>
+      <div class="grid-2">
+        <div class="metric-card"><div class="metric-label">Portfolio Return</div><div class="metric-value green" id="port-return">—</div></div>
+        <div class="metric-card"><div class="metric-label">Total Weight</div><div class="metric-value" id="port-weight">—</div></div>
+        <div class="metric-card"><div class="metric-label">Best Asset</div><div class="metric-value blue" id="port-best">—</div></div>
+        <div class="metric-card"><div class="metric-label">Worst Asset</div><div class="metric-value red" id="port-worst">—</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Contribution Breakdown</div>
+      <div style="position:relative;height:220px;"><canvas id="port-chart"></canvas></div>
+      <div class="divider"></div>
+      <div id="port-table"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== UTILS =====
+const fmt = n => '$' + Math.round(Math.abs(n)).toLocaleString();
+const fmtS = n => (n<0?'-':'') + fmt(n);
+const pct = n => (+n).toFixed(2) + '%';
+const pct1 = n => (+n).toFixed(1) + '%';
+const nArr=[1,2,4,12], nLbl=['Annual','Semi-Annual','Quarterly','Monthly'];
+let charts={};
+
+function showTab(id, el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+  const fns={simple:updateSI,annuity:updateAnnuity,discounting:updateDiscount,capital:updateCapBudget,loan:updateLoan,capm:updateCAPM,bond:updateBond,breakeven:updateBreakeven,currency:updateCurrency,portfolio:updatePortfolio};
+  if(fns[id]) fns[id]();
+}
+
+function mkChart(id,labels,datasets,type='line'){
+  if(charts[id]){charts[id].destroy();}
+  charts[id]=new Chart(document.getElementById(id),{
+    type,
+    data:{labels,datasets:datasets.map(d=>({
+      label:d.label,data:d.data,borderColor:d.color,
+      backgroundColor:d.fill?hexA(d.color,0.12):(type==='bar'?hexA(d.color,0.7):type==='doughnut'?d.colors:'transparent'),
+      fill:d.fill||false,tension:0.35,pointRadius:0,borderWidth:type==='bar'?0:2,
+      borderDash:d.dash||[],borderRadius:type==='bar'?3:0
+    }))},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#6b7280',font:{size:10,family:'DM Mono'}}}},
+      scales:type==='doughnut'?{}:{
+        x:{grid:{display:false},ticks:{color:'#6b7280',maxTicksLimit:10,font:{size:10}}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7280',font:{size:10},callback:v=>'$'+(v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'k':v)}}
+      }
+    }
+  });
+  return charts[id];
+}
+function hexA(color,a){
+  const map={'#22d3a0':'rgba(34,211,160,','#60a5fa':'rgba(96,165,250,','#fbbf24':'rgba(251,191,36,','#f87171':'rgba(248,113,113,','#a78bfa':'rgba(167,139,250,','#22d3ee':'rgba(34,211,238,'};
+  return (map[color]||'rgba(200,200,200,')+a+')';
+}
+
+// ===== COMPOUND =====
+function updateCI(){
+  const P=+document.getElementById('ci-p').value,r=+document.getElementById('ci-r').value/100,Y=+document.getElementById('ci-y').value,M=+document.getElementById('ci-m').value,ni=+document.getElementById('ci-n').value-1,n=nArr[ni];
+  document.getElementById('ci-p-out').textContent=fmt(P);
+  document.getElementById('ci-r-out').textContent=pct1(r*100);
+  document.getElementById('ci-y-out').textContent=Y+' yrs';
+  document.getElementById('ci-m-out').textContent=fmt(M);
+  document.getElementById('ci-n-out').textContent=nLbl[ni];
+  const labels=[],bals=[],invs=[];
+  for(let y=0;y<=Y;y++){
+    bals.push(Math.round(P*Math.pow(1+r/n,n*y)+(M>0?M*(Math.pow(1+r/12,12*y)-1)/(r/12):0)));
+    invs.push(Math.round(P+M*12*y)); labels.push(y===0?'Now':'Y'+y);
+  }
+  document.getElementById('ci-invested').textContent=fmt(invs[Y]);
+  document.getElementById('ci-final').textContent=fmt(bals[Y]);
+  document.getElementById('ci-interest').textContent=fmt(bals[Y]-invs[Y]);
+  document.getElementById('ci-mult').textContent=(bals[Y]/Math.max(invs[Y],1)).toFixed(2)+'×';
+  mkChart('ci-chart',labels,[{label:'Balance',data:bals,color:'#22d3a0',fill:true},{label:'Invested',data:invs,color:'#60a5fa',fill:true,dash:[4,3]}]);
+}
+
+// ===== SIMPLE =====
+function updateSI(){
+  const P=+document.getElementById('si-p').value,r=+document.getElementById('si-r').value/100,Y=+document.getElementById('si-y').value;
+  document.getElementById('si-p-out').textContent=fmt(P);
+  document.getElementById('si-r-out').textContent=pct1(r*100);
+  document.getElementById('si-y-out').textContent=Y+' yrs';
+  const labels=[],si=[],ci=[];
+  for(let y=0;y<=Y;y++){labels.push(y===0?'Now':'Y'+y);si.push(Math.round(P*(1+r*y)));ci.push(Math.round(P*Math.pow(1+r,y)));}
+  document.getElementById('si-final').textContent=fmt(si[Y]);
+  document.getElementById('si-ci-final').textContent=fmt(ci[Y]);
+  document.getElementById('si-int').textContent=fmt(si[Y]-P);
+  document.getElementById('si-diff').textContent=fmt(ci[Y]-si[Y]);
+  mkChart('si-chart',labels,[{label:'Compound',data:ci,color:'#22d3a0',fill:true},{label:'Simple',data:si,color:'#60a5fa',dash:[5,3]}]);
+}
+
+// ===== ANNUITY =====
+let annType='ordinary';
+function setAnnuityType(t){
+  annType=t;
+  ['ord','due'].forEach(x=>{const b=document.getElementById('ann-'+x+'-btn');const active=x==='ord'&&t==='ordinary'||x==='due'&&t==='due';b.style.background=active?'var(--green-dim)':'transparent';b.style.borderColor=active?'var(--green)':'var(--border)';b.style.color=active?'var(--green)':'var(--muted)';});
+  updateAnnuity();
+}
+function updateAnnuity(){
+  const PMT=+document.getElementById('ann-pmt').value,r=+document.getElementById('ann-r').value/100,n=+document.getElementById('ann-n').value,due=annType==='due'?1:0;
+  document.getElementById('ann-pmt-out').textContent=fmt(PMT);
+  document.getElementById('ann-r-out').textContent=pct1(r*100);
+  document.getElementById('ann-n-out').textContent=n;
+  const fv=PMT*((Math.pow(1+r,n)-1)/r)*(1+r*due),pv=PMT*((1-Math.pow(1+r,-n))/r)*(1+r*due);
+  document.getElementById('ann-fv').textContent=fmt(fv);
+  document.getElementById('ann-pv').textContent=fmt(pv);
+  document.getElementById('ann-total').textContent=fmt(PMT*n);
+  document.getElementById('ann-int').textContent=fmt(fv-PMT*n);
+  const labels=['Now'],cum=[0];
+  for(let i=1;i<=n;i++){labels.push('Y'+i);cum.push(Math.round(PMT*((Math.pow(1+r,i)-1)/r)*(1+r*due)));}
+  mkChart('ann-chart',labels,[{label:'FV',data:cum,color:'#a78bfa',fill:true}]);
+}
+
+// ===== DISCOUNTING =====
+function updateDiscount(){
+  const FV=+document.getElementById('dsc-fv').value,r=+document.getElementById('dsc-r').value/100,Y=+document.getElementById('dsc-y').value;
+  document.getElementById('dsc-fv-out').textContent=fmt(FV);
+  document.getElementById('dsc-r-out').textContent=pct1(r*100);
+  document.getElementById('dsc-y-out').textContent=Y+' yrs';
+  const pv=FV/Math.pow(1+r,Y);
+  document.getElementById('dsc-pv').textContent=fmt(pv);
+  document.getElementById('dsc-df').textContent=(pv/FV).toFixed(4);
+  document.getElementById('dsc-lost').textContent=fmt(FV-pv);
+  document.getElementById('dsc-pct').textContent=pct1((1-pv/FV)*100);
+  const labels=[],pvs=[];
+  for(let y=0;y<=Y;y++){labels.push(y===0?'Now':'Y'+y);pvs.push(Math.round(FV/Math.pow(1+r,Y-y)));}
+  mkChart('dsc-chart',labels,[{label:'PV',data:pvs,color:'#fbbf24',fill:true}]);
+}
+
+// ===== CAPITAL BUDGETING =====
+let cfValues=[-50000,15000,15000,15000,15000,15000];
+function renderCFInputs(){
+  const c=document.getElementById('cf-inputs');c.innerHTML='';
+  cfValues.forEach((v,i)=>{const row=document.createElement('div');row.className='cf-row';row.innerHTML=`<span class="cf-label">Y${i}</span><input type="number" value="${v}" onchange="cfValues[${i}]=+this.value;updateCapBudget()">`;c.appendChild(row);});
+}
+function addCF(){cfValues.push(10000);renderCFInputs();updateCapBudget();}
+function removeCF(){if(cfValues.length>2){cfValues.pop();renderCFInputs();updateCapBudget();}}
+function npvAt(cfs,r){return cfs.reduce((s,cf,t)=>s+cf/Math.pow(1+r,t),0);}
+function calcIRR(cfs){let lo=-0.99,hi=10,mid;for(let i=0;i<300;i++){mid=(lo+hi)/2;npvAt(cfs,mid)>0?lo=mid:hi=mid;}return mid;}
+function updateCapBudget(){
+  renderCFInputs();
+  const r=+document.getElementById('cb-r').value/100;
+  document.getElementById('cb-r-out').textContent=pct1(r*100);
+  const npv=npvAt(cfValues,r),irr=calcIRR(cfValues),init=Math.abs(cfValues[0]),pi=(npv+init)/init;
+  let cum=cfValues[0],payback=null;
+  for(let i=1;i<cfValues.length;i++){cum+=cfValues[i];if(cum>=0&&payback===null)payback=i;}
+  const npvEl=document.getElementById('cb-npv');npvEl.textContent=fmtS(npv);npvEl.className='metric-value '+(npv>=0?'green':'red');
+  document.getElementById('cb-irr').textContent=isFinite(irr)?pct(irr*100):'N/A';
+  document.getElementById('cb-payback').textContent=payback?payback+' yrs':'> '+cfValues.length+' yrs';
+  document.getElementById('cb-pi').textContent=pi.toFixed(2)+'×';
+  let html='<table><tr><th>Year</th><th>CF</th><th>PV</th><th>Cumul</th></tr>';
+  let c2=0;cfValues.forEach((cf,t)=>{const pv=cf/Math.pow(1+r,t);c2+=cf;html+=`<tr><td>Y${t}</td><td class="${cf<0?'neg':'pos'}">${fmtS(cf)}</td><td>${fmtS(pv)}</td><td class="${c2<0?'neg':'pos'}">${fmtS(c2)}</td></tr>`;});
+  html+='</table>';document.getElementById('cb-table').innerHTML=html;
+  const labels=[],cArr=[];let c3=0;cfValues.forEach((cf,i)=>{c3+=cf;labels.push('Y'+i);cArr.push(Math.round(c3));});
+  if(charts['cb-chart']){charts['cb-chart'].destroy();}
+  charts['cb-chart']=new Chart(document.getElementById('cb-chart'),{type:'bar',data:{labels,datasets:[{label:'Cum CF',data:cArr,backgroundColor:cArr.map(v=>v>=0?'rgba(34,211,160,0.65)':'rgba(248,113,113,0.65)'),borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#6b7280',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7280',font:{size:10},callback:v=>v>=0?'$'+(v/1000).toFixed(0)+'k':'-$'+(Math.abs(v)/1000).toFixed(0)+'k'}}}}});
+}
+
+// ===== LOAN =====
+function updateLoan(){
+  const P=+document.getElementById('loan-p').value,r=+document.getElementById('loan-r').value/100/12,n=+document.getElementById('loan-y').value*12;
+  document.getElementById('loan-p-out').textContent=fmt(P);
+  document.getElementById('loan-r-out').textContent=pct1(+document.getElementById('loan-r').value);
+  document.getElementById('loan-y-out').textContent=document.getElementById('loan-y').value+' yrs';
+  const emi=P*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1),total=emi*n,intT=total-P;
+  document.getElementById('loan-emi').textContent=fmt(emi);
+  document.getElementById('loan-total').textContent=fmt(total);
+  document.getElementById('loan-int').textContent=fmt(intT);
+  document.getElementById('loan-ratio').textContent=pct1(intT/total*100);
+  const yrs=+document.getElementById('loan-y').value,labels=[],princ=[],intArr=[];
+  for(let y=1;y<=yrs;y++){let pP=0,iP=0,bal=P;for(let m=1;m<=(y-1)*12;m++){const i=bal*r;bal-=(emi-i);}for(let m=0;m<12;m++){const i=bal*r;pP+=emi-i;iP+=i;bal-=emi-i;}labels.push('Y'+y);princ.push(Math.round(pP));intArr.push(Math.round(iP));}
+  if(charts['loan-chart']){charts['loan-chart'].destroy();}
+  charts['loan-chart']=new Chart(document.getElementById('loan-chart'),{type:'bar',data:{labels,datasets:[{label:'Principal',data:princ,backgroundColor:'rgba(34,211,160,0.7)',borderRadius:3},{label:'Interest',data:intArr,backgroundColor:'rgba(248,113,113,0.6)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6b7280',font:{size:10}}}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#6b7280',maxTicksLimit:10,font:{size:10}}},y:{stacked:true,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7280',font:{size:10},callback:v=>'$'+(v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'k':v)}}}}});
+}
+
+// ===== CAPM =====
+function updateCAPM(){
+  const Rf=+document.getElementById('capm-rf').value/100,Rm=+document.getElementById('capm-rm').value/100,B=+document.getElementById('capm-beta').value;
+  document.getElementById('capm-rf-out').textContent=pct1(Rf*100);
+  document.getElementById('capm-rm-out').textContent=pct1(Rm*100);
+  document.getElementById('capm-beta-out').textContent=B.toFixed(2);
+  const Re=Rf+B*(Rm-Rf),mrp=Rm-Rf,rp=B*(Rm-Rf);
+  document.getElementById('capm-re').textContent=pct1(Re*100);
+  document.getElementById('capm-mrp').textContent=pct1(mrp*100);
+  document.getElementById('capm-rp').textContent=pct1(rp*100);
+  const cls=B<0?{label:'Inverse',color:'red'}:B<0.5?{label:'Defensive',color:'blue'}:B<1?{label:'Low Risk',color:'green'}:B===1?{label:'Market',color:'amber'}:B<1.5?{label:'Moderate',color:'amber'}:{label:'Aggressive',color:'red'};
+  const clsEl=document.getElementById('capm-class');clsEl.textContent=cls.label;clsEl.className='metric-value '+cls.color;
+  document.getElementById('capm-info').innerHTML=`<strong>Formula:</strong> Re = Rf + β × (Rm − Rf)<br><strong>= </strong>${pct1(Rf*100)} + ${B.toFixed(2)} × (${pct1(Rm*100)} − ${pct1(Rf*100)}) <strong>= ${pct1(Re*100)}</strong><br><br>β = ${B.toFixed(2)} means this asset moves <strong>${B.toFixed(2)}× the market</strong>. ${B>1?'Higher risk, higher expected return.':B===1?'Moves exactly with the market.':'Lower volatility than the market.'}`;
+  // SML chart
+  const betas=[0,0.25,0.5,0.75,1,1.25,1.5,1.75,2,2.5,3],smlReturns=betas.map(b=>Rf+b*(Rm-Rf));
+  const userPoint=Array(betas.length).fill(null);
+  const closestIdx=betas.reduce((bi,b,i)=>Math.abs(b-B)<Math.abs(betas[bi]-B)?i:bi,0);
+  userPoint[closestIdx]=Re;
+  if(charts['capm-chart']){charts['capm-chart'].destroy();}
+  charts['capm-chart']=new Chart(document.getElementById('capm-chart'),{type:'line',data:{labels:betas.map(b=>b.toFixed(2)),datasets:[{label:'SML',data:smlReturns.map(r=>+(r*100).toFixed(2)),borderColor:'#22d3a0',backgroundColor:'rgba(34,211,160,0.08)',fill:true,tension:0,pointRadius:3,borderWidth:2},{label:'Your Asset',data:userPoint.map(v=>v!==null?+(v*100).toFixed(2):null),borderColor:'#fbbf24',backgroundColor:'#fbbf24',pointRadius:8,pointHoverRadius:10,showLine:false,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6b7280',font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{color:'#6b7280',font:{size:10}},title:{display:true,text:'Beta (β)',color:'#6b7280',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7280',font:{size:10},callback:v=>v+'%'},title:{display:true,text:'Expected Return (%)',color:'#6b7280',font:{size:10}}}}}});
+  // table
+  let html='<table><tr><th>β</th><th>Required Return</th><th>Risk Premium</th></tr>';
+  [0,0.5,1,1.2,1.5,2].forEach(b=>{const re=Rf+b*(Rm-Rf);html+=`<tr style="${Math.abs(b-B)<0.15?'color:var(--amber)':''}"><td>${b.toFixed(1)}</td><td>${pct1(re*100)}</td><td>${pct1(b*(Rm-Rf)*100)}</td></tr>`;});
+  html+='</table>';document.getElementById('capm-table').innerHTML=html;
+}
+
+// ===== BOND =====
+function updateBond(){
+  const FV=+document.getElementById('bond-fv').value,C=+document.getElementById('bond-c').value/100,Y=+document.getElementById('bond-y').value,ytm=+document.getElementById('bond-ytm').value/100;
+  document.getElementById('bond-fv-out').textContent=fmt(FV);
+  document.getElementById('bond-c-out').textContent=pct1(C*100);
+  document.getElementById('bond-y-out').textContent=Y+' yrs';
+  document.getElementById('bond-ytm-out').textContent=pct1(ytm*100);
+  const coupon=FV*C;
+  const price=coupon*((1-Math.pow(1+ytm,-Y))/ytm)+FV/Math.pow(1+ytm,Y);
+  const cy=coupon/price,diff=price-FV;
+  document.getElementById('bond-price').textContent=fmt(price);
+  document.getElementById('bond-coupon').textContent=fmt(coupon);
+  document.getElementById('bond-cy').textContent=pct1(cy*100);
+  const pdEl=document.getElementById('bond-pd');
+  pdEl.textContent=(diff>=0?'Premium +':'Discount ')+fmt(Math.abs(diff));
+  pdEl.className='metric-value '+(diff>=0?'green':'red');
+  document.getElementById('bond-info').innerHTML=`<strong>Bond Pricing:</strong> When market rate (YTM) > coupon rate → bond trades at <strong style="color:var(--red)">discount</strong>. When YTM < coupon rate → bond trades at <strong style="color:var(--green)">premium</strong>.<br><br>Current: Coupon ${pct1(C*100)} vs YTM ${pct1(ytm*100)} → <strong style="color:${diff>=0?'var(--green)':'var(--red)'}">${diff>=0?'Premium':'Discount'}</strong>`;
+  // price vs rate chart
+  const rates=[],prices=[];
+  for(let r2=0.5;r2<=25;r2+=0.5){const r=r2/100;rates.push(r2.toFixed(1));prices.push(+(coupon*((1-Math.pow(1+r,-Y))/r)+FV/Math.pow(1+r,Y)).toFixed(2));}
+  if(charts['bond-chart']){charts['bond-chart'].destroy();}
+  charts['bond-chart']=new Chart(document.getElementById('bond-chart'),{type:'line',data:{labels:rates,datasets:[{label:'Bond Price',data:prices,borderColor:'#60a5fa',backgroundColor:'rgba(96,165,250,0.1)',fill:true,tension:0.3,pointRadius:0,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6b7280',font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{color:'#6b7280',font:{size:10},maxTicksLimit:10},title:{display:true,text:'Market Rate (YTM %)',color:'#6b7280',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7280',font:{size:10},callback:v=>'$'+v.toLocaleString()}}}}});
+}
+
+// ===== BREAK-EVEN =====
+function updateBreakeven(){
+  const FC=+document.getElementById('be-fc').value,VC=+document.getElementById('be-vc').value,SP=+document.getElementById('be-sp').value,units=+document.getElementById('be-units').value;
+  document.getElementById('be-fc-out').textContent=fmt(FC);
+  document.getElementById('be-vc-out').textContent='$'+VC;
+  document.getElementById('be-sp-out').textContent='$'+SP;
+  document.getElementById('be-units-out').textContent=units.toLocaleString();
+  if(SP<=VC){['be-bep-u','be-bep-r','be-profit','be-mos'].forEach(id=>document.getElementById(id).textContent='N/A (SP ≤ VC)');return;}
+  const cm=SP-VC,bepU=Math.ceil(FC/cm),bepR=bepU*SP,profit=units*cm-FC,mos=((units-bepU)/units*100);
+  document.getElementById('be-bep-u').textContent=bepU.toLocaleString()+' units';
+  document.getElementById('be-bep-r').textContent=fmt(bepR);
+  const profEl=document.getElementById('be-profit');profEl.textContent=fmtS(profit);profEl.className='metric-value '+(profit>=0?'green':'red');
+  document.getElementById('be-mos').textContent=mos>=0?pct1(mos):'Below BEP';
+  const maxU=Math.max(units,bepU)*1.3,step=Math.ceil(maxU/20),labels=[],rev=[],tc=[],fc_line=[];
+  for(let u=0;u<=maxU;u+=step){labels.push(u.toLocaleString());rev.push(u*SP);tc.push(FC+u*VC);fc_line.push(FC);}
+  if(charts['be-chart']){charts['be-chart'].destroy();}
+  charts['be-chart']=new Chart(document.getElementById('be-chart'),{type:'line',data:{labels,datasets:[{label:'Revenue',data:rev,borderColor:'#22d3a0',backgroundColor:'rgba(34,211,160,0.08)',fill:true,tension:0,pointRadius:0,borderWidth:2},{label:'Total Cost',data:tc,borderColor:'#f87171',backgroundColor:'rgba(248,113,113,0.08)',fill:true,tension:0,pointRadius:0,borderWidth:2},{label:'Fixed Cost',data:fc_line,borderColor:'#fbbf24',backgroundColor:'transparent',tension:0,pointRadius:0,borderWidth:1.5,borderDash:[5,3]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6b7280',font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{color:'#6b7280',font:{size:10},maxTicksLimit:8}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7280',font:{size:10},callback:v=>'$'+(v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'k':v)}}}}});
+}
+
+// ===== CURRENCY =====
+const currencies={USD:1,EUR:0.92,GBP:0.79,JPY:149.5,BDT:110,INR:83.5,CAD:1.36,AUD:1.53,CHF:0.90,CNY:7.24,SGD:1.34,AED:3.67,MYR:4.72,THB:35.1,KRW:1325,HKD:7.82,SAR:3.75,TRY:32.1,ZAR:18.7,BRL:4.97};
+function buildCurrencySelects(){
+  const from=document.getElementById('curr-from'),to=document.getElementById('curr-to');
+  Object.keys(currencies).forEach(c=>{from.innerHTML+=`<option value="${c}">${c}</option>`;to.innerHTML+=`<option value="${c}"${c==='BDT'?' selected':''}>${c}</option>`;});
+}
+function updateCurrency(){
+  const amt=+document.getElementById('curr-amount').value||0;
+  const from=document.getElementById('curr-from').value,to=document.getElementById('curr-to').value;
+  const rate=currencies[to]/currencies[from];
+  const result=amt*rate;
+  document.getElementById('curr-result').textContent=result.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+' '+to;
+  document.getElementById('curr-rate').textContent='1 '+from+' = '+rate.toFixed(4)+' '+to;
+  let html='<table><tr><th>Currency</th><th>Rate vs USD</th><th>'+amt+' '+from+'</th></tr>';
+  Object.entries(currencies).forEach(([c,r])=>{const v=amt*(r/currencies[from]);html+=`<tr><td>${c}</td><td>${(r/currencies['USD']).toFixed(4)}</td><td>${v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td></tr>`;});
+  html+='</table>';document.getElementById('curr-table').innerHTML=html;
+}
+
+// ===== PORTFOLIO =====
+let portAssets=[{name:'Stocks (Local)',weight:40,ret:12},{name:'Bonds',weight:30,ret:6},{name:'Real Estate',weight:20,ret:9},{name:'Cash / FD',weight:10,ret:5}];
+function renderPortRows(){
+  const c=document.getElementById('port-rows');c.innerHTML='';
+  portAssets.forEach((a,i)=>{
+    const row=document.createElement('div');row.className='port-row';
+    row.innerHTML=`<input type="text" value="${a.name}" onchange="portAssets[${i}].name=this.value;updatePortfolio()" style="font-size:11px;"><input type="number" value="${a.weight}" min="0" max="100" onchange="portAssets[${i}].weight=+this.value;updatePortfolio()" style="font-size:11px;"><input type="number" value="${a.ret}" onchange="portAssets[${i}].ret=+this.value;updatePortfolio()" style="font-size:11px;"><span style="font-size:11px;color:var(--muted);" id="port-contrib-${i}">—</span><button class="icon-btn" onclick="removePortRow(${i})">×</button>`;
+    c.appendChild(row);
+  });
+}
+function addPortRow(){portAssets.push({name:'New Asset',weight:10,ret:7});renderPortRows();updatePortfolio();}
+function removePortRow(i){if(portAssets.length>1){portAssets.splice(i,1);renderPortRows();updatePortfolio();}}
+function normalizeWeights(){const tot=portAssets.reduce((s,a)=>s+a.weight,0);if(tot>0)portAssets=portAssets.map(a=>({...a,weight:+(a.weight/tot*100).toFixed(1)}));renderPortRows();updatePortfolio();}
+function updatePortfolio(){
+  renderPortRows();
+  const totalW=portAssets.reduce((s,a)=>s+a.weight,0);
+  const portRet=portAssets.reduce((s,a)=>s+(a.weight/100)*a.ret,0);
+  portAssets.forEach((a,i)=>{const contrib=(a.weight/100)*a.ret;const el=document.getElementById('port-contrib-'+i);if(el)el.textContent=contrib.toFixed(2)+'%';});
+  const wEl=document.getElementById('port-weight');wEl.textContent=totalW.toFixed(1)+'%';wEl.className='metric-value '+(Math.abs(totalW-100)<0.1?'green':'amber');
+  document.getElementById('port-return').textContent=portRet.toFixed(2)+'%';
+  const sorted=[...portAssets].sort((a,b)=>b.ret-a.ret);
+  document.getElementById('port-best').textContent=sorted[0].name+' ('+sorted[0].ret+'%)';
+  document.getElementById('port-worst').textContent=sorted[sorted.length-1].name+' ('+sorted[sorted.length-1].ret+'%)';
+  // doughnut
+  const colors=['rgba(34,211,160,0.8)','rgba(96,165,250,0.8)','rgba(251,191,36,0.8)','rgba(167,139,250,0.8)','rgba(248,113,113,0.8)','rgba(34,211,238,0.8)','rgba(251,146,60,0.8)','rgba(163,230,53,0.8)'];
+  if(charts['port-chart']){charts['port-chart'].destroy();}
+  charts['port-chart']=new Chart(document.getElementById('port-chart'),{type:'doughnut',data:{labels:portAssets.map(a=>a.name),datasets:[{data:portAssets.map(a=>a.weight),backgroundColor:portAssets.map((_,i)=>colors[i%colors.length]),borderColor:'#161922',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#6b7280',font:{size:10},padding:10}}}}});
+  let html='<table><tr><th>Asset</th><th>Weight</th><th>Return</th><th>Contribution</th></tr>';
+  portAssets.forEach(a=>{const contrib=(a.weight/100)*a.ret;html+=`<tr><td>${a.name}</td><td>${a.weight}%</td><td class="${a.ret>=0?'pos':'neg'}">${a.ret}%</td><td class="${contrib>=0?'pos':'neg'}">${contrib.toFixed(2)}%</td></tr>`;});
+  html+=`<tr style="font-weight:500;border-top:1px solid var(--border);"><td>Total</td><td>${totalW.toFixed(1)}%</td><td>—</td><td class="pos">${portRet.toFixed(2)}%</td></tr>`;
+  html+='</table>';document.getElementById('port-table').innerHTML=html;
+}
+
+// ===== INIT =====
+buildCurrencySelects();
+updateCI();
+setAnnuityType('ordinary');
+renderCFInputs();
+updateCapBudget();
+updateLoan();
+updateCAPM();
+updateBond();
+updateBreakeven();
+updateCurrency();
+updatePortfolio();
+</script>
+</body>
+</html>
