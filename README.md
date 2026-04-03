@@ -1,3 +1,7 @@
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/41f78a4d-ff06-4bfd-9a67-0cbd5ffbe7c7" />
+
+
+
 # 💹 Finance Lab
 
 An interactive, browser-based finance toolkit — no backend, no dependencies beyond Chart.js. Open the HTML file and start exploring.
