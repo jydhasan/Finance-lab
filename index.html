@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Finance Lab</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&display=swap"
+    rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <style>
+    :root {
+      --bg: #293d42;
+      --surface: #161922;
+      --surface2: #1e2330;
+      --border: #2a2f3d;
+      --text: #e8eaf0;
+      --muted: #6b7280;
+      --green: #22d3a0;
+      --green-dim: rgba(34, 211, 160, 0.12);
+      --blue: #60a5fa;
+      --blue-dim: rgba(96, 165, 250, 0.12);
+      --amber: #fbbf24;
+      --amber-dim: rgba(251, 191, 36, 0.12);
+      --red: #f87171;
+      --red-dim: rgba(248, 113, 113, 0.12);
+      --purple: #a78bfa;
+      --purple-dim: rgba(167, 139, 250, 0.12);
+      --cyan: #22d3ee;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 1.1rem 2rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      font-family: 'Fraunces', serif;
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--green);
+      letter-spacing: -0.02em;
+    }
+
+    .logo span {
+      color: var(--muted);
+      font-weight: 300;
+      font-style: italic;
+    }
+
+    .tagline {
+      font-size: 10px;
+      color: var(--muted);
+      margin-left: auto;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    nav {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      padding: 0 1.5rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    nav::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tab {
+      padding: 0.7rem 1rem;
+      font-size: 10px;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: color .15s, border-color .15s;
+      flex-shrink: 0;
+    }
+
+    .tab:hover {
+      color: var(--text);
+    }
+
+    .tab.active {
+      color: var(--green);
+      border-bottom-color: var(--green);
+    }
+
+    .panel {
+      display: none;
+      padding: 1.75rem;
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.85rem;
+    }
+
+    @media(max-width:700px) {
+
+      .grid-2,
+      .grid-4 {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.2rem;
+    }
+
+    .card-title {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 1rem;
+    }
+
+    .metric-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.9rem;
+    }
+
+    .metric-label {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.35rem;
+    }
+
+    .metric-value {
+      font-family: 'Fraunces', serif;
+      font-size: 1.35rem;
+      font-weight: 600;
+      line-height: 1;
+    }
+
+    .metric-value.green {
+      color: var(--green);
+    }
+
+    .metric-value.blue {
+      color: var(--blue);
+    }
+
+    .metric-value.amber {
+      color: var(--amber);
+    }
+
+    .metric-value.red {
+      color: var(--red);
+    }
+
+    .metric-value.purple {
+      color: var(--purple);
+    }
+
+    /* SLIDER WITH MANUAL INPUT */
+    .sg {
+      margin-bottom: 0.85rem;
+    }
+
+    .sg-name {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      display: block;
+      margin-bottom: 0.3rem;
+    }
+
+    .sg-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .sg-row input[type=range] {
+      flex: 1;
+      appearance: none;
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .sg-row input[type=range]::-webkit-slider-thumb {
+      appearance: none;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--green);
+      cursor: pointer;
+      box-shadow: 0 0 6px rgba(34, 211, 160, 0.45);
+    }
+
+    .sg-manual {
+      width: 80px;
+      flex-shrink: 0;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      padding: 0.3rem 0.45rem;
+      outline: none;
+      text-align: right;
+      -moz-appearance: textfield;
+    }
+
+    .sg-manual::-webkit-outer-spin-button,
+    .sg-manual::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+    }
+
+    .sg-manual:focus {
+      border-color: var(--green);
+    }
+
+    .chart-wrap {
+      position: relative;
+      height: 210px;
+      margin-top: 0.75rem;
+    }
+
+    .section-title {
+      font-family: 'Fraunces', serif;
+      font-size: 1rem;
+      font-weight: 300;
+      color: var(--text);
+      margin-bottom: 1.25rem;
+      border-left: 3px solid var(--green);
+      padding-left: 0.7rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    th {
+      text-align: left;
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.45rem 0.65rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 0.45rem 0.65rem;
+      border-bottom: 1px solid rgba(42, 47, 61, 0.5);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .pos {
+      color: var(--green);
+    }
+
+    .neg {
+      color: var(--red);
+    }
+
+    .cf-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 0.45rem;
+    }
+
+    .cf-label {
+      font-size: 10px;
+      color: var(--muted);
+      min-width: 44px;
+    }
+
+    input[type=number],
+    input[type=text],
+    select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      padding: 0.45rem 0.65rem;
+      width: 100%;
+      outline: none;
+      appearance: none;
+    }
+
+    input[type=number] {
+      width: 50%;
+    }
+
+    input[type=number]:focus,
+    input[type=text]:focus,
+    select:focus {
+      border-color: var(--green);
+    }
+
+    select option {
+      background: var(--surface2);
+    }
+
+    .btn {
+      background: var(--green-dim);
+      border: 1px solid var(--green);
+      color: var(--green);
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      padding: 0.4rem 0.85rem;
+      border-radius: 5px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: background .15s;
+    }
+
+    .btn:hover {
+      background: rgba(34, 211, 160, 0.22);
+    }
+
+    .btn-sm {
+      padding: 0.28rem 0.55rem;
+      font-size: 10px;
+    }
+
+    .btn-red {
+      background: var(--red-dim);
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    .btn-blue {
+      background: var(--blue-dim);
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 1.1rem 0;
+    }
+
+    .row-gap {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .label-sm {
+      font-size: 10px;
+      color: var(--muted);
+      white-space: nowrap;
+      min-width: 90px;
+    }
+
+    .port-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr auto;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .port-header {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr auto;
+      gap: 0.5rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .port-header span {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      transition: color .15s;
+    }
+
+    .icon-btn:hover {
+      color: var(--red);
+    }
+
+    .info-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-top: 0.75rem;
+    }
+
+    .info-box strong {
+      color: var(--text);
+    }
+
+    /* VDS / TDS */
+    .tax-toggle {
+      display: flex;
+      gap: 0;
+      margin-bottom: 1.1rem;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      overflow: hidden;
+    }
+
+    .tax-btn {
+      flex: 1;
+      padding: 0.6rem;
+      font-size: 11px;
+      text-align: center;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      transition: background .15s, color .15s;
+    }
+
+    .tax-btn.active {
+      background: var(--green-dim);
+      color: var(--green);
+    }
+
+    .flow-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+
+    .flow-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid rgba(42, 47, 61, 0.4);
+      font-size: 12px;
+    }
+
+    .flow-row:last-child {
+      border-bottom: none;
+      padding-top: 0.7rem;
+      font-weight: 600;
+    }
+
+    .flow-lbl {
+      color: var(--muted);
+    }
+
+    .flow-val {
+      color: var(--text);
+    }
+
+    .flow-val.green {
+      color: var(--green);
+    }
+
+    .flow-val.red {
+      color: var(--red);
+    }
+
+    .flow-val.amber {
+      color: var(--amber);
+    }
+
+    .flow-val.blue {
+      color: var(--blue);
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="logo">Finance<span>Lab</span></div>
+    <div class="tagline">12 Interactive Tools</div>
+  </header>
+  <nav>
+    <div class="tab active" onclick="showTab('compound',this)">Compound Interest</div>
+    <div class="tab" onclick="showTab('simple',this)">Simple Interest</div>
+    <div class="tab" onclick="showTab('annuity',this)">Annuity</div>
+    <div class="tab" onclick="showTab('discounting',this)">Discounting / PV</div>
+    <div class="tab" onclick="showTab('capital',this)">Capital Budgeting</div>
+    <div class="tab" onclick="showTab('loan',this)">Loan / EMI</div>
+    <div class="tab" onclick="showTab('capm',this)">CAPM & Beta</div>
+    <div class="tab" onclick="showTab('bond',this)">Bond / YTM</div>
+    <div class="tab" onclick="showTab('breakeven',this)">Break-Even</div>
+    <div class="tab" onclick="showTab('currency',this)">Currency</div>
+    <div class="tab" onclick="showTab('portfolio',this)">Portfolio</div>
+    <div class="tab" onclick="showTab('withholding',this)">VDS / TDS</div>
+  </nav>
+
+  <!-- COMPOUND -->
+  <div class="panel active" id="tab-compound">
+    <div class="section-title">Compound Interest Explorer</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Parameters</div>
+        <div id="ci-sliders"></div>
+      </div>
+      <div>
+        <div class="grid-4" style="margin-bottom:1rem;">
+          <div class="metric-card">
+            <div class="metric-label">Total Invested</div>
+            <div class="metric-value blue" id="ci-invested">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Final Balance</div>
+            <div class="metric-value green" id="ci-final">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Interest Earned</div>
+            <div class="metric-value amber" id="ci-interest">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Multiplier</div>
+            <div class="metric-value purple" id="ci-mult">—</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="chart-wrap"><canvas id="ci-chart"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIMPLE -->
+  <div class="panel" id="tab-simple">
+    <div class="section-title">Simple Interest — vs Compound</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Parameters</div>
+        <div id="si-sliders"></div>
+        <div class="divider"></div>
+        <div class="grid-4">
+          <div class="metric-card">
+            <div class="metric-label">SI Balance</div>
+            <div class="metric-value blue" id="si-final">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">CI Balance</div>
+            <div class="metric-value green" id="si-ci-final">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">SI Interest</div>
+            <div class="metric-value amber" id="si-int">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">CI Advantage</div>
+            <div class="metric-value purple" id="si-diff">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Growth Comparison</div>
+        <div class="chart-wrap"><canvas id="si-chart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANNUITY -->
+  <div class="panel" id="tab-annuity">
+    <div class="section-title">Annuity Calculator</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Parameters</div>
+        <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+          <button class="btn" id="ann-ord-btn" onclick="setAnnuityType('ordinary')">Ordinary</button>
+          <button class="btn" style="background:transparent;border-color:var(--border);color:var(--muted);"
+            id="ann-due-btn" onclick="setAnnuityType('due')">Annuity Due</button>
+        </div>
+        <div id="ann-sliders"></div>
+        <div class="divider"></div>
+        <div class="grid-4">
+          <div class="metric-card">
+            <div class="metric-label">Future Value</div>
+            <div class="metric-value green" id="ann-fv">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Present Value</div>
+            <div class="metric-value blue" id="ann-pv">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Total Paid</div>
+            <div class="metric-value amber" id="ann-total">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Interest Portion</div>
+            <div class="metric-value purple" id="ann-int">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Cumulative FV Growth</div>
+        <div class="chart-wrap"><canvas id="ann-chart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DISCOUNTING -->
+  <div class="panel" id="tab-discounting">
+    <div class="section-title">Discounting & Present Value</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Parameters</div>
+        <div id="dsc-sliders"></div>
+        <div class="divider"></div>
+        <div class="grid-4">
+          <div class="metric-card">
+            <div class="metric-label">Present Value</div>
+            <div class="metric-value green" id="dsc-pv">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Discount Factor</div>
+            <div class="metric-value blue" id="dsc-df">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Value Lost</div>
+            <div class="metric-value red" id="dsc-lost">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Loss %</div>
+            <div class="metric-value amber" id="dsc-pct">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">PV Decay Over Time</div>
+        <div class="chart-wrap"><canvas id="dsc-chart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAPITAL BUDGETING -->
+  <div class="panel" id="tab-capital">
+    <div class="section-title">Capital Budgeting — NPV, IRR & Payback</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Cash Flows & Rate</div>
+        <div id="cb-sliders"></div>
+        <div class="card-title" style="margin-top:0.5rem;">Cash Flows ($) — Y0 = initial outflow</div>
+        <div id="cf-inputs"></div>
+        <div style="display:flex;gap:0.5rem;margin-top:0.65rem;">
+          <button class="btn btn-sm" onclick="addCF()">+ Year</button>
+          <button class="btn btn-sm btn-red" onclick="removeCF()">− Remove</button>
+        </div>
+      </div>
+      <div>
+        <div class="grid-4" style="margin-bottom:1rem;">
+          <div class="metric-card">
+            <div class="metric-label">NPV</div>
+            <div class="metric-value" id="cb-npv">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">IRR</div>
+            <div class="metric-value purple" id="cb-irr">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Payback</div>
+            <div class="metric-value amber" id="cb-payback">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">PI</div>
+            <div class="metric-value blue" id="cb-pi">—</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Cumulative Cash Flow</div>
+          <div class="chart-wrap" style="height:160px;"><canvas id="cb-chart"></canvas></div>
+        </div>
+        <div class="card" style="margin-top:1rem;">
+          <div id="cb-table"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOAN -->
+  <div class="panel" id="tab-loan">
+    <div class="section-title">Loan & EMI Calculator</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Loan Details</div>
+        <div id="loan-sliders"></div>
+        <div class="divider"></div>
+        <div class="grid-4">
+          <div class="metric-card">
+            <div class="metric-label">Monthly EMI</div>
+            <div class="metric-value green" id="loan-emi">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Total Payment</div>
+            <div class="metric-value blue" id="loan-total">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Total Interest</div>
+            <div class="metric-value red" id="loan-int">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Interest Ratio</div>
+            <div class="metric-value amber" id="loan-ratio">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Principal vs Interest (Yearly)</div>
+        <div class="chart-wrap"><canvas id="loan-chart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAPM -->
+  <div class="panel" id="tab-capm">
+    <div class="section-title">CAPM & Beta Calculator</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">CAPM Inputs</div>
+        <div id="capm-sliders"></div>
+        <div class="divider"></div>
+        <div class="grid-4">
+          <div class="metric-card">
+            <div class="metric-label">Required Return</div>
+            <div class="metric-value green" id="capm-re">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Market Premium</div>
+            <div class="metric-value blue" id="capm-mrp">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Risk Premium</div>
+            <div class="metric-value amber" id="capm-rp">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Beta Class</div>
+            <div class="metric-value" id="capm-class">—</div>
+          </div>
+        </div>
+        <div class="info-box" id="capm-info"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Security Market Line</div>
+        <div class="chart-wrap"><canvas id="capm-chart"></canvas></div>
+        <div class="divider"></div>
+        <div id="capm-table"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOND -->
+  <div class="panel" id="tab-bond">
+    <div class="section-title">Bond Pricing & Yield to Maturity</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Bond Parameters</div>
+        <div id="bond-sliders"></div>
+        <div class="divider"></div>
+        <div class="grid-4">
+          <div class="metric-card">
+            <div class="metric-label">Bond Price</div>
+            <div class="metric-value green" id="bond-price">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Annual Coupon</div>
+            <div class="metric-value blue" id="bond-coupon">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Current Yield</div>
+            <div class="metric-value amber" id="bond-cy">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Prem / Disc</div>
+            <div class="metric-value" id="bond-pd">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Bond Price vs Market Rate</div>
+        <div class="chart-wrap"><canvas id="bond-chart"></canvas></div>
+        <div class="info-box" id="bond-info"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BREAK-EVEN -->
+  <div class="panel" id="tab-breakeven">
+    <div class="section-title">Break-Even Analysis</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Cost & Revenue Inputs</div>
+        <div id="be-sliders"></div>
+        <div class="divider"></div>
+        <div class="grid-4">
+          <div class="metric-card">
+            <div class="metric-label">BEP (Units)</div>
+            <div class="metric-value green" id="be-bep-u">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">BEP (Revenue)</div>
+            <div class="metric-value blue" id="be-bep-r">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Profit / Loss</div>
+            <div class="metric-value" id="be-profit">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Margin of Safety</div>
+            <div class="metric-value amber" id="be-mos">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Cost / Revenue Chart</div>
+        <div class="chart-wrap"><canvas id="be-chart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CURRENCY -->
+  <div class="panel" id="tab-currency">
+    <div class="section-title">Currency Converter</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Convert</div>
+        <div class="row-gap"><span class="label-sm">Amount</span><input type="number" id="curr-amount" value="1000"
+            oninput="updateCurrency()" style="font-size:1.1rem;font-family:'Fraunces',serif;"></div>
+        <div class="row-gap"><span class="label-sm">From</span><select id="curr-from"
+            onchange="updateCurrency()"></select></div>
+        <div class="row-gap"><span class="label-sm">To</span><select id="curr-to" onchange="updateCurrency()"></select>
+        </div>
+        <div class="divider"></div>
+        <div class="metric-card" style="margin-bottom:0.75rem;">
+          <div class="metric-label">Converted Amount</div>
+          <div class="metric-value green" id="curr-result" style="font-size:1.8rem;">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Exchange Rate</div>
+          <div class="metric-value blue" id="curr-rate">—</div>
+        </div>
+        <div class="info-box" style="margin-top:0.75rem;"><strong>Note:</strong> Approximate rates for educational use.
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Quick Reference vs USD</div>
+        <div id="curr-table"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PORTFOLIO -->
+  <div class="panel" id="tab-portfolio">
+    <div class="section-title">Portfolio Return Tracker</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Holdings</div>
+        <div class="port-header"><span>Asset</span><span>Weight %</span><span>Return
+            %</span><span>Contrib.</span><span></span></div>
+        <div id="port-rows"></div>
+        <div style="display:flex;gap:0.5rem;margin-top:0.75rem;">
+          <button class="btn btn-sm" onclick="addPortRow()">+ Asset</button>
+          <button class="btn btn-sm btn-blue" onclick="normalizeWeights()">Normalize</button>
+        </div>
+        <div class="divider"></div>
+        <div class="grid-4">
+          <div class="metric-card">
+            <div class="metric-label">Portfolio Return</div>
+            <div class="metric-value green" id="port-return">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Total Weight</div>
+            <div class="metric-value" id="port-weight">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Best Asset</div>
+            <div class="metric-value blue" id="port-best">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Worst Asset</div>
+            <div class="metric-value red" id="port-worst">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Allocation Breakdown</div>
+        <div style="position:relative;height:210px;"><canvas id="port-chart"></canvas></div>
+        <div class="divider"></div>
+        <div id="port-table"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VDS / TDS -->
+  <div class="panel" id="tab-withholding">
+    <div class="section-title">VDS & TDS Withholding Calculator</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Invoice & Tax Parameters</div>
+        <div class="tax-toggle">
+          <div class="tax-btn active" id="wh-inc-btn" onclick="setWHType('inclusive')">⬤ Inclusive (VAT সহ)</div>
+          <div class="tax-btn" id="wh-exc-btn" onclick="setWHType('exclusive')">◯ Exclusive (VAT ছাড়া)</div>
+        </div>
+        <div class="info-box" id="wh-mode-info" style="margin-top:0;margin-bottom:1rem;font-size:11px;"></div>
+
+        <span class="sg-name">Invoice / Contract Amount (৳)</span>
+        <div class="sg-row" style="margin-bottom:0.85rem;">
+          <input type="range" id="wh-amt-r" min="10000" max="10000000" step="10000" value="1000000"
+            oninput="document.getElementById('wh-amt').value=this.value;updateWH()">
+          <input class="sg-manual" id="wh-amt" type="number" value="1000000"
+            oninput="let v=Math.max(0,+this.value||0);document.getElementById('wh-amt-r').value=Math.min(v,10000000);updateWH()">
+        </div>
+
+        <span class="sg-name">VDS Rate (%)</span>
+        <div class="sg-row" style="margin-bottom:0.85rem;">
+          <input type="range" id="wh-vds-r" min="0" max="15" step="0.5" value="7.5"
+            oninput="document.getElementById('wh-vds').value=this.value;updateWH()">
+          <input class="sg-manual" id="wh-vds" type="number" value="7.5" step="0.5"
+            oninput="let v=Math.max(0,Math.min(15,+this.value||0));document.getElementById('wh-vds-r').value=v;updateWH()">
+        </div>
+
+        <span class="sg-name">TDS Rate (%)</span>
+        <div class="sg-row" style="margin-bottom:1rem;">
+          <input type="range" id="wh-tds-r" min="0" max="15" step="0.5" value="5"
+            oninput="document.getElementById('wh-tds').value=this.value;updateWH()">
+          <input class="sg-manual" id="wh-tds" type="number" value="5" step="0.5"
+            oninput="let v=Math.max(0,Math.min(15,+this.value||0));document.getElementById('wh-tds-r').value=v;updateWH()">
+        </div>
+
+        <div class="divider"></div>
+        <div class="card-title">Quick Presets (VDS / TDS)</div>
+        <div style="display:flex;flex-wrap:wrap;gap:0.4rem;">
+          <button class="btn btn-sm" onclick="setRates(7.5,5)">7.5% / 5%</button>
+          <button class="btn btn-sm" onclick="setRates(15,10)">15% / 10%</button>
+          <button class="btn btn-sm" onclick="setRates(5,3)">5% / 3%</button>
+          <button class="btn btn-sm" onclick="setRates(7.5,0)">VDS only 7.5%</button>
+          <button class="btn btn-sm" onclick="setRates(0,5)">TDS only 5%</button>
+          <button class="btn btn-sm" onclick="setRates(0,2)">TDS only 2%</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="card" style="margin-bottom:1rem;">
+          <div class="card-title">Step-by-Step Breakdown</div>
+          <div class="flow-box" id="wh-flow"></div>
+        </div>
+        <div class="grid-4" style="margin-bottom:1rem;">
+          <div class="metric-card">
+            <div class="metric-label">VDS Withheld</div>
+            <div class="metric-value red" id="wh-vds-amt">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">TDS Withheld</div>
+            <div class="metric-value amber" id="wh-tds-amt">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Total Deducted</div>
+            <div class="metric-value purple" id="wh-total">—</div>
+          </div>
+          <!-- <div class="metric-card">
+            <div class="metric-label">Net to Payee</div>
+            <div class="metric-value green" id="wh-net">—</div>
+          </div> -->
+        </div>
+        <!-- Both Are Change due ro width problem -->
+        <div class="grid-4" style="margin-bottom:1rem;">
+          <!-- <div class="metric-card">
+            <div class="metric-label">VDS Withheld</div>
+            <div class="metric-value red" id="wh-vds-amt">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">TDS Withheld</div>
+            <div class="metric-value amber" id="wh-tds-amt">—</div>
+          </div> -->
+          <!-- <div class="metric-card">
+            <div class="metric-label">Total Deducted</div>
+            <div class="metric-value purple" id="wh-total">—</div>
+          </div> -->
+          <div class="metric-card">
+            <div class="metric-label">Net to Payee</div>
+            <div class="metric-value green" id="wh-net">—</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Deduction Breakdown</div>
+          <div style="position:relative;height:175px;"><canvas id="wh-chart"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== UTILS =====
+    const fmtD = n => '$' + Math.round(Math.abs(n)).toLocaleString();
+    const fmtDS = n => (n < 0 ? '-' : '') + fmtD(n);
+    const fmtBDT = n => '৳' + Math.abs(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const pct = n => (+n).toFixed(2) + '%';
+    const pct1 = n => (+n).toFixed(1) + '%';
+    const nArr = [1, 2, 4, 12];
+    let charts = {};
+
+    // ===== TAB =====
+    function showTab(id, el) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('tab-' + id).classList.add('active');
+      const fns = { simple: updateSI, annuity: updateAnnuity, discounting: updateDiscount, capital: updateCapBudget, loan: updateLoan, capm: updateCAPM, bond: updateBond, breakeven: updateBreakeven, currency: updateCurrency, portfolio: updatePortfolio, withholding: updateWH };
+      if (fns[id]) fns[id]();
+    }
+
+    // ===== SLIDER BUILDER =====
+    function buildSliders(cid, cfgs, fn) {
+      const c = document.getElementById(cid);
+      if (!c || c.children.length > 0) return;
+      cfgs.forEach(cfg => {
+        const d = document.createElement('div'); d.className = 'sg';
+        d.innerHTML = `<span class="sg-name">${cfg.label}</span>
+    <div class="sg-row">
+      <input type="range" id="${cfg.id}-r" min="${cfg.min}" max="${cfg.max}" step="${cfg.step}" value="${cfg.val}"
+        oninput="document.getElementById('${cfg.id}').value=this.value;${fn}()">
+      <input class="sg-manual" id="${cfg.id}" type="number" value="${cfg.val}" step="${cfg.step}"
+        oninput="let _v=Math.max(${cfg.min},Math.min(${cfg.max},+this.value||${cfg.min}));document.getElementById('${cfg.id}-r').value=_v;${fn}()">
+    </div>`;
+        c.appendChild(d);
+      });
+    }
+    function G(id) { return +document.getElementById(id).value || 0; }
+
+    // ===== CHART FACTORY =====
+    function mkChart(id, labels, ds, type = 'line') {
+      if (charts[id]) charts[id].destroy();
+      charts[id] = new Chart(document.getElementById(id), {
+        type, data: {
+          labels, datasets: ds.map(d => ({
+            label: d.label, data: d.data, borderColor: d.color,
+            backgroundColor: type === 'bar' ? hexA(d.color, 0.7) : type === 'doughnut' ? d.colors : d.fill ? hexA(d.color, 0.11) : 'transparent',
+            fill: d.fill || false, tension: 0.35, pointRadius: 0, borderWidth: type === 'bar' ? 0 : 2,
+            borderDash: d.dash || [], borderRadius: type === 'bar' ? 3 : 0
+          }))
+        }, options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#6b7280', font: { size: 10, family: 'DM Mono' } } } },
+          scales: type === 'doughnut' ? {} : {
+            x: { grid: { display: false }, ticks: { color: '#6b7280', maxTicksLimit: 10, font: { size: 10 } } },
+            y: {
+              grid: { color: 'rgba(255,255,255,0.04)' }, ticks: {
+                color: '#6b7280', font: { size: 10 },
+                callback: v => '$' + (v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(0) + 'k' : v)
+              }
+            }
+          }
+        }
+      });
+    }
+    function hexA(c, a) { const m = { '#22d3a0': 'rgba(34,211,160,', '#60a5fa': 'rgba(96,165,250,', '#fbbf24': 'rgba(251,191,36,', '#f87171': 'rgba(248,113,113,', '#a78bfa': 'rgba(167,139,250,' }; return (m[c] || 'rgba(200,200,200,') + a + ')'; }
+
+    // ===== COMPOUND =====
+    function updateCI() {
+      buildSliders('ci-sliders', [
+        { id: 'ci-p', label: 'Principal ($)', min: 1000, max: 500000, step: 1000, val: 10000 },
+        { id: 'ci-r', label: 'Annual Rate (%)', min: 0.5, max: 30, step: 0.5, val: 7 },
+        { id: 'ci-y', label: 'Years', min: 1, max: 50, step: 1, val: 20 },
+        { id: 'ci-m', label: 'Monthly Add-on ($)', min: 0, max: 5000, step: 50, val: 0 },
+        { id: 'ci-n', label: 'Compounding (1=Ann 2=Semi 3=Qtr 4=Mo)', min: 1, max: 4, step: 1, val: 3 },
+      ], 'updateCI');
+      const P = G('ci-p'), r = G('ci-r') / 100, Y = G('ci-y'), M = G('ci-m'), ni = G('ci-n') - 1, n = nArr[ni];
+      const lbl = [], bals = [], invs = [];
+      for (let y = 0; y <= Y; y++) { bals.push(Math.round(P * Math.pow(1 + r / n, n * y) + (M > 0 ? M * (Math.pow(1 + r / 12, 12 * y) - 1) / (r / 12) : 0))); invs.push(Math.round(P + M * 12 * y)); lbl.push(y === 0 ? 'Now' : 'Y' + y); }
+      document.getElementById('ci-invested').textContent = fmtD(invs[Y]);
+      document.getElementById('ci-final').textContent = fmtD(bals[Y]);
+      document.getElementById('ci-interest').textContent = fmtD(bals[Y] - invs[Y]);
+      document.getElementById('ci-mult').textContent = (bals[Y] / Math.max(invs[Y], 1)).toFixed(2) + '×';
+      mkChart('ci-chart', lbl, [{ label: 'Balance', data: bals, color: '#22d3a0', fill: true }, { label: 'Invested', data: invs, color: '#60a5fa', fill: true, dash: [4, 3] }]);
+    }
+
+    // ===== SIMPLE =====
+    function updateSI() {
+      buildSliders('si-sliders', [
+        { id: 'si-p', label: 'Principal ($)', min: 1000, max: 500000, step: 1000, val: 10000 },
+        { id: 'si-r', label: 'Annual Rate (%)', min: 0.5, max: 30, step: 0.5, val: 7 },
+        { id: 'si-y', label: 'Years', min: 1, max: 40, step: 1, val: 10 },
+      ], 'updateSI');
+      const P = G('si-p'), r = G('si-r') / 100, Y = G('si-y'), lbl = [], si = [], ci = [];
+      for (let y = 0; y <= Y; y++) { lbl.push(y === 0 ? 'Now' : 'Y' + y); si.push(Math.round(P * (1 + r * y))); ci.push(Math.round(P * Math.pow(1 + r, y))); }
+      document.getElementById('si-final').textContent = fmtD(si[Y]);
+      document.getElementById('si-ci-final').textContent = fmtD(ci[Y]);
+      document.getElementById('si-int').textContent = fmtD(si[Y] - P);
+      document.getElementById('si-diff').textContent = fmtD(ci[Y] - si[Y]);
+      mkChart('si-chart', lbl, [{ label: 'Compound', data: ci, color: '#22d3a0', fill: true }, { label: 'Simple', data: si, color: '#60a5fa', dash: [5, 3] }]);
+    }
+
+    // ===== ANNUITY =====
+    let annType = 'ordinary';
+    function setAnnuityType(t) {
+      annType = t;
+      ['ord', 'due'].forEach(x => { const b = document.getElementById('ann-' + x + '-btn'), a = (x === 'ord' && t === 'ordinary') || (x === 'due' && t === 'due'); b.style.background = a ? 'var(--green-dim)' : 'transparent'; b.style.borderColor = a ? 'var(--green)' : 'var(--border)'; b.style.color = a ? 'var(--green)' : 'var(--muted)'; });
+      updateAnnuity();
+    }
+    function updateAnnuity() {
+      buildSliders('ann-sliders', [
+        { id: 'ann-pmt', label: 'Payment PMT ($)', min: 100, max: 10000, step: 100, val: 1000 },
+        { id: 'ann-r', label: 'Annual Rate (%)', min: 0.5, max: 25, step: 0.5, val: 6 },
+        { id: 'ann-n', label: 'Periods (n)', min: 1, max: 40, step: 1, val: 10 },
+      ], 'updateAnnuity');
+      const PMT = G('ann-pmt'), r = G('ann-r') / 100, n = G('ann-n'), due = annType === 'due' ? 1 : 0;
+      const fv = PMT * ((Math.pow(1 + r, n) - 1) / r) * (1 + r * due), pv = PMT * ((1 - Math.pow(1 + r, -n)) / r) * (1 + r * due);
+      document.getElementById('ann-fv').textContent = fmtD(fv);
+      document.getElementById('ann-pv').textContent = fmtD(pv);
+      document.getElementById('ann-total').textContent = fmtD(PMT * n);
+      document.getElementById('ann-int').textContent = fmtD(fv - PMT * n);
+      const lbl = ['Now'], cum = [0];
+      for (let i = 1; i <= n; i++) { lbl.push('Y' + i); cum.push(Math.round(PMT * ((Math.pow(1 + r, i) - 1) / r) * (1 + r * due))); }
+      mkChart('ann-chart', lbl, [{ label: 'FV', data: cum, color: '#a78bfa', fill: true }]);
+    }
+
+    // ===== DISCOUNTING =====
+    function updateDiscount() {
+      buildSliders('dsc-sliders', [
+        { id: 'dsc-fv', label: 'Future Value ($)', min: 1000, max: 1000000, step: 1000, val: 50000 },
+        { id: 'dsc-r', label: 'Discount Rate (%)', min: 0.5, max: 30, step: 0.5, val: 8 },
+        { id: 'dsc-y', label: 'Years', min: 1, max: 50, step: 1, val: 10 },
+      ], 'updateDiscount');
+      const FV = G('dsc-fv'), r = G('dsc-r') / 100, Y = G('dsc-y'), pv = FV / Math.pow(1 + r, Y);
+      document.getElementById('dsc-pv').textContent = fmtD(pv);
+      document.getElementById('dsc-df').textContent = (pv / FV).toFixed(4);
+      document.getElementById('dsc-lost').textContent = fmtD(FV - pv);
+      document.getElementById('dsc-pct').textContent = pct1((1 - pv / FV) * 100);
+      const lbl = [], pvs = [];
+      for (let y = 0; y <= Y; y++) { lbl.push(y === 0 ? 'Now' : 'Y' + y); pvs.push(Math.round(FV / Math.pow(1 + r, Y - y))); }
+      mkChart('dsc-chart', lbl, [{ label: 'PV', data: pvs, color: '#fbbf24', fill: true }]);
+    }
+
+    // ===== CAPITAL BUDGETING =====
+    let cfValues = [-50000, 15000, 15000, 15000, 15000, 15000];
+    function renderCFInputs() { const c = document.getElementById('cf-inputs'); c.innerHTML = ''; cfValues.forEach((v, i) => { const r = document.createElement('div'); r.className = 'cf-row'; r.innerHTML = `<span class="cf-label">Y${i}</span><input type="number" value="${v}" onchange="cfValues[${i}]=+this.value;updateCapBudget()">`; c.appendChild(r); }); }
+    function addCF() { cfValues.push(10000); renderCFInputs(); updateCapBudget(); }
+    function removeCF() { if (cfValues.length > 2) { cfValues.pop(); renderCFInputs(); updateCapBudget(); } }
+    function npvAt(cfs, r) { return cfs.reduce((s, cf, t) => s + cf / Math.pow(1 + r, t), 0); }
+    function calcIRR(cfs) { let lo = -0.99, hi = 10, mid; for (let i = 0; i < 300; i++) { mid = (lo + hi) / 2; npvAt(cfs, mid) > 0 ? lo = mid : hi = mid; } return mid; }
+    function updateCapBudget() {
+      buildSliders('cb-sliders', [{ id: 'cb-r', label: 'Discount Rate WACC (%)', min: 1, max: 40, step: 0.5, val: 10 }], 'updateCapBudget');
+      renderCFInputs();
+      const r = G('cb-r') / 100, npv = npvAt(cfValues, r), irr = calcIRR(cfValues), init = Math.abs(cfValues[0]), pi = (npv + init) / init;
+      let cum = cfValues[0], payback = null;
+      for (let i = 1; i < cfValues.length; i++) { cum += cfValues[i]; if (cum >= 0 && payback === null) payback = i; }
+      const ne = document.getElementById('cb-npv'); ne.textContent = fmtDS(npv); ne.className = 'metric-value ' + (npv >= 0 ? 'green' : 'red');
+      document.getElementById('cb-irr').textContent = isFinite(irr) ? pct(irr * 100) : 'N/A';
+      document.getElementById('cb-payback').textContent = payback ? payback + ' yrs' : '> ' + cfValues.length + ' yrs';
+      document.getElementById('cb-pi').textContent = pi.toFixed(2) + '×';
+      let html = '<table><tr><th>Year</th><th>CF</th><th>PV</th><th>Cumul</th></tr>';
+      let c2 = 0; cfValues.forEach((cf, t) => { const pv = cf / Math.pow(1 + r, t); c2 += cf; html += `<tr><td>Y${t}</td><td class="${cf < 0 ? 'neg' : 'pos'}">${fmtDS(cf)}</td><td>${fmtDS(pv)}</td><td class="${c2 < 0 ? 'neg' : 'pos'}">${fmtDS(c2)}</td></tr>`; });
+      document.getElementById('cb-table').innerHTML = html + '</table>';
+      const lbl = [], cArr = []; let c3 = 0; cfValues.forEach((cf, i) => { c3 += cf; lbl.push('Y' + i); cArr.push(Math.round(c3)); });
+      if (charts['cb-chart']) charts['cb-chart'].destroy();
+      charts['cb-chart'] = new Chart(document.getElementById('cb-chart'), { type: 'bar', data: { labels: lbl, datasets: [{ label: 'Cum CF', data: cArr, backgroundColor: cArr.map(v => v >= 0 ? 'rgba(34,211,160,0.65)' : 'rgba(248,113,113,0.65)'), borderRadius: 3 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { color: '#6b7280', font: { size: 10 } } }, y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#6b7280', font: { size: 10 }, callback: v => v >= 0 ? '$' + (v / 1000).toFixed(0) + 'k' : '-$' + (Math.abs(v) / 1000).toFixed(0) + 'k' } } } } });
+    }
+
+    // ===== LOAN =====
+    function updateLoan() {
+      buildSliders('loan-sliders', [
+        { id: 'loan-p', label: 'Loan Amount ($)', min: 10000, max: 2000000, step: 5000, val: 100000 },
+        { id: 'loan-r', label: 'Annual Rate (%)', min: 0.5, max: 30, step: 0.25, val: 8 },
+        { id: 'loan-y', label: 'Tenure (years)', min: 1, max: 30, step: 1, val: 20 },
+      ], 'updateLoan');
+      const P = G('loan-p'), r = G('loan-r') / 100 / 12, n = G('loan-y') * 12, emi = P * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1), total = emi * n, intT = total - P;
+      document.getElementById('loan-emi').textContent = fmtD(emi);
+      document.getElementById('loan-total').textContent = fmtD(total);
+      document.getElementById('loan-int').textContent = fmtD(intT);
+      document.getElementById('loan-ratio').textContent = pct1(intT / total * 100);
+      const yrs = G('loan-y'), lbl = [], princ = [], intArr = [];
+      for (let y = 1; y <= yrs; y++) { let pP = 0, iP = 0, bal = P; for (let m = 1; m <= (y - 1) * 12; m++) { const i = bal * r; bal -= (emi - i); } for (let m = 0; m < 12; m++) { const i = bal * r; pP += emi - i; iP += i; bal -= emi - i; } lbl.push('Y' + y); princ.push(Math.round(pP)); intArr.push(Math.round(iP)); }
+      if (charts['loan-chart']) charts['loan-chart'].destroy();
+      charts['loan-chart'] = new Chart(document.getElementById('loan-chart'), { type: 'bar', data: { labels: lbl, datasets: [{ label: 'Principal', data: princ, backgroundColor: 'rgba(34,211,160,0.7)', borderRadius: 3 }, { label: 'Interest', data: intArr, backgroundColor: 'rgba(248,113,113,0.6)', borderRadius: 3 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#6b7280', font: { size: 10 } } } }, scales: { x: { stacked: true, grid: { display: false }, ticks: { color: '#6b7280', maxTicksLimit: 10, font: { size: 10 } } }, y: { stacked: true, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#6b7280', font: { size: 10 }, callback: v => '$' + (v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(0) + 'k' : v) } } } } });
+    }
+
+    // ===== CAPM =====
+    function updateCAPM() {
+      buildSliders('capm-sliders', [
+        { id: 'capm-rf', label: 'Risk-Free Rate Rf (%)', min: 0, max: 15, step: 0.25, val: 4 },
+        { id: 'capm-rm', label: 'Market Return Rm (%)', min: 0, max: 25, step: 0.25, val: 10 },
+        { id: 'capm-beta', label: 'Beta (β)', min: 0, max: 3, step: 0.05, val: 1.2 },
+      ], 'updateCAPM');
+      const Rf = G('capm-rf') / 100, Rm = G('capm-rm') / 100, B = G('capm-beta'), Re = Rf + B * (Rm - Rf);
+      document.getElementById('capm-re').textContent = pct1(Re * 100);
+      document.getElementById('capm-mrp').textContent = pct1((Rm - Rf) * 100);
+      document.getElementById('capm-rp').textContent = pct1(B * (Rm - Rf) * 100);
+      const cls = B < 0 ? { l: 'Inverse', c: 'red' } : B < 0.5 ? { l: 'Defensive', c: 'blue' } : B < 1 ? { l: 'Low Risk', c: 'green' } : B < 1.5 ? { l: 'Moderate', c: 'amber' } : { l: 'Aggressive', c: 'red' };
+      const ce = document.getElementById('capm-class'); ce.textContent = cls.l; ce.className = 'metric-value ' + cls.c;
+      document.getElementById('capm-info').innerHTML = `<strong>Re = Rf + β×(Rm−Rf)</strong> = ${pct1(Rf * 100)} + ${B.toFixed(2)}×(${pct1(Rm * 100)}−${pct1(Rf * 100)}) = <strong>${pct1(Re * 100)}</strong>`;
+      const betas = [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3], sml = betas.map(b => +((Rf + b * (Rm - Rf)) * 100).toFixed(2));
+      const up = Array(betas.length).fill(null); up[betas.reduce((bi, b, i) => Math.abs(b - B) < Math.abs(betas[bi] - B) ? i : bi, 0)] = +(Re * 100).toFixed(2);
+      if (charts['capm-chart']) charts['capm-chart'].destroy();
+      charts['capm-chart'] = new Chart(document.getElementById('capm-chart'), { type: 'line', data: { labels: betas.map(b => b.toFixed(2)), datasets: [{ label: 'SML', data: sml, borderColor: '#22d3a0', backgroundColor: 'rgba(34,211,160,0.08)', fill: true, tension: 0, pointRadius: 3, borderWidth: 2 }, { label: 'Your Asset', data: up, borderColor: '#fbbf24', backgroundColor: '#fbbf24', pointRadius: 8, showLine: false, borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#6b7280', font: { size: 10 } } } }, scales: { x: { grid: { display: false }, ticks: { color: '#6b7280', font: { size: 10 } }, title: { display: true, text: 'Beta (β)', color: '#6b7280', font: { size: 10 } } }, y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#6b7280', font: { size: 10 }, callback: v => v + '%' } } } } });
+      let html = '<table><tr><th>β</th><th>Required Return</th><th>Risk Premium</th></tr>';
+      [0, 0.5, 1, 1.2, 1.5, 2].forEach(b => { const re = Rf + b * (Rm - Rf); html += `<tr style="${Math.abs(b - B) < 0.15 ? 'color:var(--amber)' : ''}"><td>${b.toFixed(1)}</td><td>${pct1(re * 100)}</td><td>${pct1(b * (Rm - Rf) * 100)}</td></tr>`; });
+      document.getElementById('capm-table').innerHTML = html + '</table>';
+    }
+
+    // ===== BOND =====
+    function updateBond() {
+      buildSliders('bond-sliders', [
+        { id: 'bond-fv', label: 'Face Value ($)', min: 100, max: 10000, step: 100, val: 1000 },
+        { id: 'bond-c', label: 'Coupon Rate (%)', min: 0, max: 20, step: 0.25, val: 6 },
+        { id: 'bond-y', label: 'Years to Maturity', min: 1, max: 30, step: 1, val: 10 },
+        { id: 'bond-ytm', label: 'Market Rate YTM (%)', min: 0.5, max: 25, step: 0.25, val: 8 },
+      ], 'updateBond');
+      const FV = G('bond-fv'), C = G('bond-c') / 100, Y = G('bond-y'), ytm = G('bond-ytm') / 100;
+      const coupon = FV * C, price = coupon * ((1 - Math.pow(1 + ytm, -Y)) / ytm) + FV / Math.pow(1 + ytm, Y), diff = price - FV;
+      document.getElementById('bond-price').textContent = fmtD(price);
+      document.getElementById('bond-coupon').textContent = fmtD(coupon);
+      document.getElementById('bond-cy').textContent = pct1(coupon / price * 100);
+      const pd = document.getElementById('bond-pd'); pd.textContent = (diff >= 0 ? 'Premium +' : 'Discount ') + fmtD(Math.abs(diff)); pd.className = 'metric-value ' + (diff >= 0 ? 'green' : 'red');
+      document.getElementById('bond-info').innerHTML = `YTM > Coupon → <strong style="color:var(--red)">Discount</strong>. YTM < Coupon → <strong style="color:var(--green)">Premium</strong>. Now: ${diff >= 0 ? 'Premium' : 'Discount'}.`;
+      const rates = [], prices = [];
+      for (let r2 = 0.5; r2 <= 25; r2 += 0.5) { const r = r2 / 100; rates.push(r2.toFixed(1)); prices.push(+(coupon * ((1 - Math.pow(1 + r, -Y)) / r) + FV / Math.pow(1 + r, Y)).toFixed(2)); }
+      if (charts['bond-chart']) charts['bond-chart'].destroy();
+      charts['bond-chart'] = new Chart(document.getElementById('bond-chart'), { type: 'line', data: { labels: rates, datasets: [{ label: 'Bond Price', data: prices, borderColor: '#60a5fa', backgroundColor: 'rgba(96,165,250,0.1)', fill: true, tension: 0.3, pointRadius: 0, borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#6b7280', font: { size: 10 } } } }, scales: { x: { grid: { display: false }, ticks: { color: '#6b7280', font: { size: 10 }, maxTicksLimit: 10 }, title: { display: true, text: 'Market Rate %', color: '#6b7280', font: { size: 10 } } }, y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#6b7280', font: { size: 10 }, callback: v => '$' + v.toLocaleString() } } } } });
+    }
+
+    // ===== BREAK-EVEN =====
+    function updateBreakeven() {
+      buildSliders('be-sliders', [
+        { id: 'be-fc', label: 'Fixed Costs ($)', min: 1000, max: 500000, step: 1000, val: 50000 },
+        { id: 'be-vc', label: 'Variable Cost / Unit ($)', min: 1, max: 500, step: 1, val: 30 },
+        { id: 'be-sp', label: 'Selling Price / Unit ($)', min: 2, max: 1000, step: 1, val: 50 },
+        { id: 'be-units', label: 'Expected Units Sold', min: 100, max: 50000, step: 100, val: 5000 },
+      ], 'updateBreakeven');
+      const FC = G('be-fc'), VC = G('be-vc'), SP = G('be-sp'), units = G('be-units');
+      if (SP <= VC) { ['be-bep-u', 'be-bep-r', 'be-profit', 'be-mos'].forEach(id => document.getElementById(id).textContent = 'N/A'); return; }
+      const cm = SP - VC, bepU = Math.ceil(FC / cm), bepR = bepU * SP, profit = units * cm - FC, mos = (units - bepU) / units * 100;
+      document.getElementById('be-bep-u').textContent = bepU.toLocaleString() + ' units';
+      document.getElementById('be-bep-r').textContent = fmtD(bepR);
+      const pe = document.getElementById('be-profit'); pe.textContent = fmtDS(profit); pe.className = 'metric-value ' + (profit >= 0 ? 'green' : 'red');
+      document.getElementById('be-mos').textContent = mos >= 0 ? pct1(mos) : 'Below BEP';
+      const maxU = Math.max(units, bepU) * 1.3, step = Math.ceil(maxU / 20), lbl = [], rev = [], tc = [], fcl = [];
+      for (let u = 0; u <= maxU; u += step) { lbl.push(u.toLocaleString()); rev.push(u * SP); tc.push(FC + u * VC); fcl.push(FC); }
+      if (charts['be-chart']) charts['be-chart'].destroy();
+      charts['be-chart'] = new Chart(document.getElementById('be-chart'), { type: 'line', data: { labels: lbl, datasets: [{ label: 'Revenue', data: rev, borderColor: '#22d3a0', backgroundColor: 'rgba(34,211,160,0.08)', fill: true, tension: 0, pointRadius: 0, borderWidth: 2 }, { label: 'Total Cost', data: tc, borderColor: '#f87171', backgroundColor: 'rgba(248,113,113,0.08)', fill: true, tension: 0, pointRadius: 0, borderWidth: 2 }, { label: 'Fixed Cost', data: fcl, borderColor: '#fbbf24', backgroundColor: 'transparent', tension: 0, pointRadius: 0, borderWidth: 1.5, borderDash: [5, 3] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#6b7280', font: { size: 10 } } } }, scales: { x: { grid: { display: false }, ticks: { color: '#6b7280', font: { size: 10 }, maxTicksLimit: 8 } }, y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#6b7280', font: { size: 10 }, callback: v => '$' + (v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(0) + 'k' : v) } } } } });
+    }
+
+    // ===== CURRENCY =====
+    const currencies = { USD: 1, EUR: 0.92, GBP: 0.79, JPY: 149.5, BDT: 110, INR: 83.5, CAD: 1.36, AUD: 1.53, CHF: 0.90, CNY: 7.24, SGD: 1.34, AED: 3.67, MYR: 4.72, THB: 35.1, KRW: 1325, HKD: 7.82, SAR: 3.75, TRY: 32.1, ZAR: 18.7, BRL: 4.97 };
+    function buildCurrencySelects() {
+      const f = document.getElementById('curr-from'), t = document.getElementById('curr-to');
+      Object.keys(currencies).forEach(c => { f.innerHTML += `<option value="${c}">${c}</option>`; t.innerHTML += `<option value="${c}"${c === 'BDT' ? ' selected' : ''}>${c}</option>`; });
+    }
+    function updateCurrency() {
+      const amt = +document.getElementById('curr-amount').value || 0, from = document.getElementById('curr-from').value, to = document.getElementById('curr-to').value;
+      const rate = currencies[to] / currencies[from], result = amt * rate;
+      document.getElementById('curr-result').textContent = result.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + to;
+      document.getElementById('curr-rate').textContent = '1 ' + from + ' = ' + rate.toFixed(4) + ' ' + to;
+      let html = '<table><tr><th>Currency</th><th>Rate/USD</th><th>' + amt + ' ' + from + '</th></tr>';
+      Object.entries(currencies).forEach(([c, r]) => { const v = amt * (r / currencies[from]); html += `<tr><td>${c}</td><td>${(r / currencies.USD).toFixed(4)}</td><td>${v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td></tr>`; });
+      document.getElementById('curr-table').innerHTML = html + '</table>';
+    }
+
+    // ===== PORTFOLIO =====
+    let portAssets = [{ name: 'Stocks (Local)', weight: 40, ret: 12 }, { name: 'Bonds', weight: 30, ret: 6 }, { name: 'Real Estate', weight: 20, ret: 9 }, { name: 'Cash / FD', weight: 10, ret: 5 }];
+    function renderPortRows() {
+      const c = document.getElementById('port-rows'); c.innerHTML = '';
+      portAssets.forEach((a, i) => { const r = document.createElement('div'); r.className = 'port-row'; r.innerHTML = `<input type="text" value="${a.name}" onchange="portAssets[${i}].name=this.value;updatePortfolio()" style="font-size:11px;"><input type="number" value="${a.weight}" min="0" max="100" onchange="portAssets[${i}].weight=+this.value;updatePortfolio()" style="font-size:11px;"><input type="number" value="${a.ret}" onchange="portAssets[${i}].ret=+this.value;updatePortfolio()" style="font-size:11px;"><span style="font-size:11px;color:var(--muted);" id="port-contrib-${i}">—</span><button class="icon-btn" onclick="removePortRow(${i})">×</button>`; c.appendChild(r); });
+    }
+    function addPortRow() { portAssets.push({ name: 'New Asset', weight: 10, ret: 7 }); renderPortRows(); updatePortfolio(); }
+    function removePortRow(i) { if (portAssets.length > 1) { portAssets.splice(i, 1); renderPortRows(); updatePortfolio(); } }
+    function normalizeWeights() { const tot = portAssets.reduce((s, a) => s + a.weight, 0); if (tot > 0) portAssets = portAssets.map(a => ({ ...a, weight: +(a.weight / tot * 100).toFixed(1) })); renderPortRows(); updatePortfolio(); }
+    function updatePortfolio() {
+      renderPortRows();
+      const totalW = portAssets.reduce((s, a) => s + a.weight, 0), portRet = portAssets.reduce((s, a) => s + (a.weight / 100) * a.ret, 0);
+      portAssets.forEach((a, i) => { const el = document.getElementById('port-contrib-' + i); if (el) el.textContent = ((a.weight / 100) * a.ret).toFixed(2) + '%'; });
+      const we = document.getElementById('port-weight'); we.textContent = totalW.toFixed(1) + '%'; we.className = 'metric-value ' + (Math.abs(totalW - 100) < 0.1 ? 'green' : 'amber');
+      document.getElementById('port-return').textContent = portRet.toFixed(2) + '%';
+      const s = [...portAssets].sort((a, b) => b.ret - a.ret);
+      document.getElementById('port-best').textContent = s[0].name + ' (' + s[0].ret + '%)';
+      document.getElementById('port-worst').textContent = s[s.length - 1].name + ' (' + s[s.length - 1].ret + '%)';
+      const colors = ['rgba(34,211,160,0.8)', 'rgba(96,165,250,0.8)', 'rgba(251,191,36,0.8)', 'rgba(167,139,250,0.8)', 'rgba(248,113,113,0.8)', 'rgba(34,211,238,0.8)', 'rgba(251,146,60,0.8)', 'rgba(163,230,53,0.8)'];
+      if (charts['port-chart']) charts['port-chart'].destroy();
+      charts['port-chart'] = new Chart(document.getElementById('port-chart'), { type: 'doughnut', data: { labels: portAssets.map(a => a.name), datasets: [{ data: portAssets.map(a => a.weight), backgroundColor: portAssets.map((_, i) => colors[i % colors.length]), borderColor: '#161922', borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#6b7280', font: { size: 10 }, padding: 10 } } } } });
+      let html = '<table><tr><th>Asset</th><th>Weight</th><th>Return</th><th>Contribution</th></tr>';
+      portAssets.forEach(a => { const contrib = (a.weight / 100) * a.ret; html += `<tr><td>${a.name}</td><td>${a.weight}%</td><td class="${a.ret >= 0 ? 'pos' : 'neg'}">${a.ret}%</td><td class="${contrib >= 0 ? 'pos' : 'neg'}">${contrib.toFixed(2)}%</td></tr>`; });
+      html += `<tr style="font-weight:600;border-top:1px solid var(--border);"><td>Total</td><td>${totalW.toFixed(1)}%</td><td>—</td><td class="pos">${portRet.toFixed(2)}%</td></tr>`;
+      document.getElementById('port-table').innerHTML = html + '</table>';
+    }
+
+    // ===== VDS / TDS =====
+    let whType = 'inclusive';
+    function setWHType(t) {
+      whType = t;
+      document.getElementById('wh-inc-btn').className = 'tax-btn' + (t === 'inclusive' ? ' active' : '');
+      document.getElementById('wh-exc-btn').className = 'tax-btn' + (t === 'exclusive' ? ' active' : '');
+      updateWH();
+    }
+    function setRates(vds, tds) {
+      document.getElementById('wh-vds').value = vds; document.getElementById('wh-vds-r').value = vds;
+      document.getElementById('wh-tds').value = tds; document.getElementById('wh-tds-r').value = tds;
+      updateWH();
+    }
+    function updateWH() {
+      const amount = +document.getElementById('wh-amt').value || 0;
+      const vR = +document.getElementById('wh-vds').value / 100;
+      const tR = +document.getElementById('wh-tds').value / 100;
+      let baseAmt, vdsAmt, tdsAmt, grossAmt, netPayment;
+
+      if (whType === 'inclusive') {
+        /*
+          INCLUSIVE: Invoice amount-এ VDS already included আছে।
+          Step 1: Base Amount = Invoice ÷ (1 + VDS%)
+          Step 2: VDS = Invoice − Base  (= Base × VDS%)
+          Step 3: TDS = Base × TDS%
+          Step 4: Net Payment = Invoice − VDS − TDS
+        */
+        grossAmt = amount;
+        baseAmt = amount / (1 + vR);
+        vdsAmt = grossAmt - baseAmt;   // = base × vR
+        tdsAmt = baseAmt * tR;
+        netPayment = grossAmt - vdsAmt - tdsAmt;
+
+        document.getElementById('wh-mode-info').innerHTML =
+          `<strong>Inclusive:</strong> Invoice ৳${amount.toLocaleString('en-IN')} এ VDS already ধরা আছে। প্রথমে Base বের করা হয়, তারপর Base-এর উপর TDS কাটা হয়।`;
+
+        document.getElementById('wh-flow').innerHTML = `
+      <div class="flow-row"><span class="flow-lbl">📄 Invoice Amount (VAT inclusive)</span><span class="flow-val blue">${fmtBDT(grossAmt)}</span></div>
+      <div class="flow-row"><span class="flow-lbl">⬇ Base Amount = Invoice ÷ (1 + ${(vR * 100).toFixed(1)}%)</span><span class="flow-val">${fmtBDT(baseAmt)}</span></div>
+      <div class="flow-row"><span class="flow-lbl">🏛 VDS Withheld = Invoice − Base &nbsp;<span style="font-size:10px;opacity:.6;">[${(vR * 100).toFixed(1)}% on base]</span></span><span class="flow-val red">− ${fmtBDT(vdsAmt)}</span></div>
+      <div class="flow-row"><span class="flow-lbl">🏛 TDS Withheld = Base × ${(tR * 100).toFixed(1)}%</span><span class="flow-val amber">− ${fmtBDT(tdsAmt)}</span></div>
+      <div class="flow-row"><span class="flow-lbl" style="color:var(--text);">💸 Net Payment to Payee</span><span class="flow-val green">${fmtBDT(netPayment)}</span></div>
+      <div style="margin-top:0.5rem;font-size:10px;color:var(--muted);">Effective deduction: ${grossAmt > 0 ? ((vdsAmt + tdsAmt) / grossAmt * 100).toFixed(2) + '%' : '—'} of invoice &nbsp;|&nbsp; VDS + TDS → NBR</div>`;
+
+      } else {
+        /*
+          EXCLUSIVE: Invoice amount হল Base (VAT ছাড়া)।
+          Step 1: VDS = Base × VDS%  → Buyer আলাদা দেয় Govt-কে
+          Step 2: Gross Invoice = Base + VDS
+          Step 3: TDS = Base × TDS%  → Base থেকে কাটা হয়
+          Step 4: Net Payment to Payee = Base − TDS
+          (VDS buyer দেয়, তাই payee-র কাছ থেকে কাটা হয় না)
+        */
+        baseAmt = amount;
+        vdsAmt = baseAmt * vR;
+        grossAmt = baseAmt + vdsAmt;
+        tdsAmt = baseAmt * tR;
+        netPayment = baseAmt - tdsAmt;
+
+        document.getElementById('wh-mode-info').innerHTML =
+          `<strong>Exclusive:</strong> Contract amount ৳${amount.toLocaleString('en-IN')} হল Base (VAT ছাড়া)। VDS আলাদাভাবে Govt-এ জমা হয়, TDS Base থেকে কাটা হয়।`;
+
+        document.getElementById('wh-flow').innerHTML = `
+      <div class="flow-row"><span class="flow-lbl">📄 Base / Contract Amount (excl. VAT)</span><span class="flow-val blue">${fmtBDT(baseAmt)}</span></div>
+      <div class="flow-row"><span class="flow-lbl">➕ VDS = Base × ${(vR * 100).toFixed(1)}% &nbsp;<span style="font-size:10px;opacity:.6;">[Buyer pays to Govt]</span></span><span class="flow-val" style="color:var(--muted);">+ ${fmtBDT(vdsAmt)}</span></div>
+      <div class="flow-row"><span class="flow-lbl">📋 Gross Invoice Total (Base + VDS)</span><span class="flow-val">${fmtBDT(grossAmt)}</span></div>
+      <div class="flow-row"><span class="flow-lbl">🏛 TDS Withheld = Base × ${(tR * 100).toFixed(1)}% &nbsp;<span style="font-size:10px;opacity:.6;">[Deducted from Payee]</span></span><span class="flow-val amber">− ${fmtBDT(tdsAmt)}</span></div>
+      <div class="flow-row"><span class="flow-lbl" style="color:var(--text);">💸 Net Payment to Payee (Base − TDS)</span><span class="flow-val green">${fmtBDT(netPayment)}</span></div>
+      <div style="margin-top:0.5rem;font-size:10px;color:var(--muted);">VDS → Govt (Buyer দেয়) &nbsp;|&nbsp; TDS → NBR (Payee থেকে কাটা) &nbsp;|&nbsp; TDS rate on base: ${(tR * 100).toFixed(2)}%</div>`;
+      }
+
+      document.getElementById('wh-vds-amt').textContent = fmtBDT(vdsAmt);
+      document.getElementById('wh-tds-amt').textContent = fmtBDT(tdsAmt);
+      document.getElementById('wh-total').textContent = fmtBDT(vdsAmt + tdsAmt);
+      document.getElementById('wh-net').textContent = fmtBDT(netPayment);
+
+      // Chart
+      if (charts['wh-chart']) charts['wh-chart'].destroy();
+      const net = Math.max(0, netPayment);
+      charts['wh-chart'] = new Chart(document.getElementById('wh-chart'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Net to Payee', 'VDS (Withheld)', 'TDS (Withheld)'],
+          datasets: [{ data: [net, vdsAmt, tdsAmt], backgroundColor: ['rgba(34,211,160,0.82)', 'rgba(248,113,113,0.78)', 'rgba(251,191,36,0.78)'], borderColor: '#161922', borderWidth: 2 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { position: 'right', labels: { color: '#6b7280', font: { size: 10 }, padding: 12 } } }
+        }
+      });
+    }
+
+    // ===== INIT =====
+    buildCurrencySelects();
+    updateCI();
+    setAnnuityType('ordinary');
+    renderCFInputs();
+    updateCapBudget();
+    updateLoan();
+    updateCAPM();
+    updateBond();
+    updateBreakeven();
+    updateCurrency();
+    updatePortfolio();
+    setWHType('inclusive');
+  </script>
+</body>
+
+</html>
